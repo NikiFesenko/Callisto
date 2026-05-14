@@ -1,7 +1,7 @@
 // @ts-nocheck
 import React from 'react';
 import { ScrollView } from 'react-native';
-import { XStack, YStack } from 'tamagui';
+import { XStack, YStack } from '@/src/components/ui/core';
 import { KPICard } from './KPICard';
 import { useLatestFREDValue } from '@/src/api/fred';
 import { useMarketData } from '@/src/api/coingecko';

@@ -1,7 +1,7 @@
 // @ts-nocheck
 import React from 'react';
 import { Platform } from 'react-native';
-import { YStack, XStack, Text, Button, Spinner } from 'tamagui';
+import { YStack, XStack, Text, Button, Spinner } from '@/src/components/ui/core';
 import { useWalletStore } from '@/src/store/useWalletStore';
 import { useOpenWalletModal } from '@/src/components/wallet/useOpenWalletModal';
 import { Colors } from '@/src/lib/constants';

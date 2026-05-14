@@ -48,6 +48,15 @@ export function SolanaWalletProvider({ children }: { children: React.ReactNode }
   useEffect(() => {
     if (Platform.OS === 'web') {
       setIsMounted(true);
+      
+      // Foolproof CSS injection for the wallet modal to ensure it works in Expo dev mode
+      if (typeof document !== 'undefined' && !document.getElementById('wallet-adapter-css')) {
+        const link = document.createElement('link');
+        link.id = 'wallet-adapter-css';
+        link.rel = 'stylesheet';
+        link.href = 'https://unpkg.com/@solana/wallet-adapter-react-ui@latest/styles.css';
+        document.head.appendChild(link);
+      }
     }
   }, []);
 

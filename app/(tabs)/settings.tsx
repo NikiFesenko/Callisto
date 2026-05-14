@@ -1,7 +1,7 @@
 // @ts-nocheck
 import React from 'react';
 import { Platform } from 'react-native';
-import { YStack, XStack, Text, Button, Switch } from 'tamagui';
+import { YStack, XStack, Text, Button, Switch } from '@/src/components/ui/core';
 import { PageShell } from '@/src/components/ui/PageShell';
 import { GlassCard } from '@/src/components/ui/GlassCard';
 import { useWalletStore } from '@/src/store/useWalletStore';
@@ -80,17 +80,20 @@ export default function SettingsScreen() {
               <Text fontSize={14} fontWeight="600" color={Colors.textSecondary} textTransform="uppercase" letterSpacing={0.5}>Preferences</Text>
             </YStack>
             <SettingsRow label="Dark Mode" accessibilityLabel="Toggle dark mode">
-              <Switch size="$2" checked={theme === 'dark'}
-                onCheckedChange={(checked) => setTheme(checked ? 'dark' : 'light')}
-                backgroundColor={theme === 'dark' ? Colors.neonGreenDim : Colors.bgElevated}>
-                <Switch.Thumb animation="quick" backgroundColor={Colors.textPrimary} />
-              </Switch>
+              <Switch 
+                value={theme === 'dark'}
+                onValueChange={(checked) => setTheme(checked ? 'dark' : 'light')}
+                trackColor={{ false: Colors.bgElevated, true: Colors.neonGreenDim }}
+                thumbColor={Colors.textPrimary}
+              />
             </SettingsRow>
             <SettingsRow label="Notifications" accessibilityLabel="Toggle notifications">
-              <Switch size="$2" checked={notificationsEnabled} onCheckedChange={toggleNotifications}
-                backgroundColor={notificationsEnabled ? Colors.neonGreenDim : Colors.bgElevated}>
-                <Switch.Thumb animation="quick" backgroundColor={Colors.textPrimary} />
-              </Switch>
+              <Switch 
+                value={notificationsEnabled} 
+                onValueChange={toggleNotifications}
+                trackColor={{ false: Colors.bgElevated, true: Colors.neonGreenDim }}
+                thumbColor={Colors.textPrimary}
+              />
             </SettingsRow>
           </GlassCard>
         </YStack>

@@ -1,6 +1,6 @@
 // @ts-nocheck
 import React from 'react';
-import { YStack, XStack, Text, Switch, Button } from 'tamagui';
+import { YStack, XStack, Text, Switch, Button } from '@/src/components/ui/core';
 import { GlassCard } from '@/src/components/ui/GlassCard';
 import { StatusBadge } from '@/src/components/ui/StatusBadge';
 import { Colors } from '@/src/lib/constants';

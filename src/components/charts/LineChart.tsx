@@ -1,7 +1,7 @@
 // @ts-nocheck
 import React, { useState, useMemo } from 'react';
 import { useWindowDimensions } from 'react-native';
-import { YStack, XStack, Text, Button } from 'tamagui';
+import { YStack, XStack, Text, Button } from '@/src/components/ui/core';
 import { Skeleton } from '@/src/components/ui/Skeleton';
 import { Colors } from '@/src/lib/constants';
 import Svg, { Path, Line, Text as SvgText, Circle, Defs, LinearGradient, Stop } from 'react-native-svg';
@@ -43,7 +43,10 @@ export function LineChart({
 }: LineChartProps) {
   const [activeRange, setActiveRange] = useState(selectedRange);
   const { width: screenWidth } = useWindowDimensions();
-  const chartWidth = screenWidth - 64;
+  
+  // PageShell max-width is 1000px, minus ~32px app padding and ~32px card padding.
+  const containerMaxWidth = Math.min(screenWidth, 1000);
+  const chartWidth = containerMaxWidth - 64; 
   const chartHeight = height;
   const padding = { top: 20, right: 16, bottom: 30, left: 55 };
 
@@ -159,7 +162,7 @@ export function LineChart({
   };
 
   return (
-    <YStack gap="$2">
+    <YStack width="100%" gap="$2">
       {showTimeRanges && (
         <XStack gap="$1" justifyContent="flex-end" paddingRight="$2">
           {TIME_RANGES.map((range) => (

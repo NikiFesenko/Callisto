@@ -1,6 +1,6 @@
 // @ts-nocheck — Tamagui v2 RC index-signature strict typing
 import React from 'react';
-import { YStack, XStack, Text } from 'tamagui';
+import { YStack, XStack, Text } from '@/src/components/ui/core';
 import { Colors } from '@/src/lib/constants';
 import { formatUSD, formatNumber } from '@/src/lib/formatters';
 import { StatusBadge } from '@/src/components/ui/StatusBadge';

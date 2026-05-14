@@ -22,11 +22,11 @@ export default function Root({ children }: PropsWithChildren) {
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
         />
 
-        {/* Solana Wallet Adapter styles — inline to ensure availability */}
-        <style dangerouslySetInnerHTML={{ __html: `
-          .wallet-adapter-modal-overlay { background: rgba(0, 0, 0, 0.5); }
-        `}} />
-
+        {/* Solana Wallet Adapter styles */}
+        <link
+          rel="stylesheet"
+          href="https://unpkg.com/@solana/wallet-adapter-react-ui@latest/styles.css"
+        />
         {/*
           Disable body scrolling on web. This makes ScrollView components work closer to
           how they do on native. If you want to enable scrolling on the body, remove this.

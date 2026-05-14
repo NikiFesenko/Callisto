@@ -1,15 +1,15 @@
 // @ts-nocheck
-import React, { useMemo } from 'react';
-import { ScrollView, Platform, View, StyleSheet } from 'react-native';
-import { YStack, Text } from 'tamagui';
-import { PageShell } from '@/src/components/ui/PageShell';
-import { KPIRow } from '@/src/components/dashboard/KPIRow';
+import { usePriceHistory } from '@/src/api/coingecko';
+import { useFREDSeries } from '@/src/api/fred';
 import { ChartCard } from '@/src/components/charts/ChartCard';
 import { LineChart, type ChartDataPoint } from '@/src/components/charts/LineChart';
+import { KPIRow } from '@/src/components/dashboard/KPIRow';
 import { MacroOverlay } from '@/src/components/dashboard/MacroOverlay';
-import { useFREDSeries } from '@/src/api/fred';
-import { usePriceHistory } from '@/src/api/coingecko';
-import { FRED_SERIES, Colors } from '@/src/lib/constants';
+import { Text, YStack } from '@/src/components/ui/core';
+import { PageShell } from '@/src/components/ui/PageShell';
+import { Colors, FRED_SERIES } from '@/src/lib/constants';
+import React, { useMemo } from 'react';
+import { Platform } from 'react-native';
 
 
 

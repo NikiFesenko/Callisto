@@ -1,16 +1,16 @@
 // @ts-nocheck
-import React from 'react';
-import { Platform } from 'react-native';
-import { YStack, XStack, Text } from 'tamagui';
+import { ChartCard } from '@/src/components/charts/ChartCard';
+import { DonutChart, type DonutSegment } from '@/src/components/charts/DonutChart';
+import { AnimatedCounter } from '@/src/components/ui/AnimatedCounter';
+import { Text, YStack } from '@/src/components/ui/core';
+import { GlassCard } from '@/src/components/ui/GlassCard';
 import { PageShell } from '@/src/components/ui/PageShell';
 import { ConnectButton } from '@/src/components/wallet/ConnectButton';
 import { TokenBalance } from '@/src/components/wallet/TokenBalance';
-import { DonutChart, type DonutSegment } from '@/src/components/charts/DonutChart';
-import { ChartCard } from '@/src/components/charts/ChartCard';
-import { AnimatedCounter } from '@/src/components/ui/AnimatedCounter';
-import { GlassCard } from '@/src/components/ui/GlassCard';
-import { useWalletStore } from '@/src/store/useWalletStore';
 import { Colors } from '@/src/lib/constants';
+import { useWalletStore } from '@/src/store/useWalletStore';
+import React from 'react';
+import { Platform } from 'react-native';
 
 const MOCK_TOKENS = [
   { symbol: 'SOL', name: 'Solana', balance: 24.5, usdValue: 4372.03, change24h: 3.21 },

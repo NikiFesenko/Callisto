@@ -1,53 +1,6 @@
 // @ts-nocheck
 import React from 'react';
-import { styled, Text, XStack, GetProps } from 'tamagui';
-
-const BadgeFrame = styled(XStack, {
-  paddingHorizontal: '$2',
-  paddingVertical: '$1',
-  borderRadius: 8,
-  alignItems: 'center',
-  gap: '$1',
-
-  variants: {
-    variant: {
-      positive: {
-        backgroundColor: 'rgba(0, 255, 136, 0.12)',
-      },
-      negative: {
-        backgroundColor: 'rgba(255, 77, 106, 0.12)',
-      },
-      neutral: {
-        backgroundColor: 'rgba(148, 163, 184, 0.12)',
-      },
-      info: {
-        backgroundColor: 'rgba(99, 102, 241, 0.12)',
-      },
-      warning: {
-        backgroundColor: 'rgba(251, 191, 36, 0.12)',
-      },
-    },
-    size: {
-      sm: {
-        paddingHorizontal: '$1.5',
-        paddingVertical: 2,
-      },
-      md: {
-        paddingHorizontal: '$2',
-        paddingVertical: '$1',
-      },
-      lg: {
-        paddingHorizontal: '$3',
-        paddingVertical: '$1.5',
-      },
-    },
-  } as const,
-
-  defaultVariants: {
-    variant: 'neutral',
-    size: 'md',
-  },
-});
+import { Text, XStack } from '@/src/components/ui/core';
 
 const badgeTextColors = {
   positive: '#00FF88',
@@ -57,22 +10,54 @@ const badgeTextColors = {
   warning: '#FBB724',
 };
 
-type StatusBadgeProps = GetProps<typeof BadgeFrame> & {
-  label: string;
-  variant?: keyof typeof badgeTextColors;
+const badgeBgColors = {
+  positive: 'rgba(0, 255, 136, 0.12)',
+  negative: 'rgba(255, 77, 106, 0.12)',
+  neutral: 'rgba(148, 163, 184, 0.12)',
+  info: 'rgba(99, 102, 241, 0.12)',
+  warning: 'rgba(251, 191, 36, 0.12)',
 };
 
-export function StatusBadge({ label, variant = 'neutral', ...props }: StatusBadgeProps) {
+interface StatusBadgeProps {
+  label: string;
+  variant?: keyof typeof badgeTextColors;
+  size?: 'sm' | 'md' | 'lg';
+}
+
+export function StatusBadge({ label, variant = 'neutral', size = 'md', ...props }: StatusBadgeProps) {
+  let paddingHorizontal = '$2';
+  let paddingVertical = '$1';
+  let fontSize = 12;
+
+  if (size === 'sm') {
+    paddingHorizontal = '$1.5';
+    paddingVertical = 2;
+    fontSize = 11;
+  } else if (size === 'lg') {
+    paddingHorizontal = '$3';
+    paddingVertical = '$1.5';
+    fontSize = 14;
+  }
+
   return (
-    <BadgeFrame variant={variant} {...props} accessibilityLabel={`Status: ${label}`}>
+    <XStack
+      paddingHorizontal={paddingHorizontal}
+      paddingVertical={paddingVertical}
+      borderRadius={8}
+      alignItems="center"
+      gap="$1"
+      backgroundColor={badgeBgColors[variant]}
+      accessibilityLabel={`Status: ${label}`}
+      {...props}
+    >
       <Text
-        fontSize={props.size === 'sm' ? 11 : props.size === 'lg' ? 14 : 12}
+        fontSize={fontSize}
         fontWeight="600"
         fontFamily="$mono"
         color={badgeTextColors[variant]}
       >
         {label}
       </Text>
-    </BadgeFrame>
+    </XStack>
   );
 }

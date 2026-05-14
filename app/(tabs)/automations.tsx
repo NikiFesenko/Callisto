@@ -1,12 +1,12 @@
 // @ts-nocheck
-import React, { useState } from 'react';
-import { ScrollView, Platform } from 'react-native';
-import { YStack, XStack, Text, Button } from 'tamagui';
-import { PageShell } from '@/src/components/ui/PageShell';
 import { TriggerCard } from '@/src/components/automations/TriggerCard';
 import { TriggerForm } from '@/src/components/automations/TriggerForm';
-import { useAutomationStore } from '@/src/store/useAutomationStore';
+import { Button, Text, XStack, YStack } from '@/src/components/ui/core';
+import { PageShell } from '@/src/components/ui/PageShell';
 import { Colors } from '@/src/lib/constants';
+import { useAutomationStore } from '@/src/store/useAutomationStore';
+import React, { useState } from 'react';
+import { Platform, ScrollView } from 'react-native';
 
 type FilterTab = 'all' | 'active' | 'triggered' | 'executed';
 

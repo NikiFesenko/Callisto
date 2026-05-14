@@ -1,7 +1,7 @@
 // @ts-nocheck
-import { Link, Stack } from 'expo-router';
-import { YStack, Text } from 'tamagui';
+import { Text, YStack } from '@/src/components/ui/core';
 import { Colors } from '@/src/lib/constants';
+import { Link, Stack } from 'expo-router';
 
 export default function NotFoundScreen() {
   return (

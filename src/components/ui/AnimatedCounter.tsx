@@ -1,7 +1,7 @@
 // @ts-nocheck
 import React, { useEffect, useRef } from 'react';
 import { Animated } from 'react-native';
-import { Text, GetProps } from 'tamagui';
+import { Text, GetProps } from '@/src/components/ui/core';
 
 interface AnimatedCounterProps {
   value: number;

@@ -1,51 +1,12 @@
 // @ts-nocheck
 import React, { useEffect, useRef } from 'react';
-import { Animated } from 'react-native';
-import { YStack, styled, GetProps } from 'tamagui';
+import { Animated, ViewStyle } from 'react-native';
 
-const SkeletonFrame = styled(YStack, {
-  backgroundColor: 'rgba(30, 41, 59, 0.5)',
-  borderRadius: 8,
-  overflow: 'hidden',
+interface SkeletonProps {
+  variant?: 'text' | 'title' | 'card' | 'chart' | 'circle';
+}
 
-  variants: {
-    variant: {
-      text: {
-        height: 16,
-        width: '60%',
-        borderRadius: 4,
-      },
-      title: {
-        height: 24,
-        width: '40%',
-        borderRadius: 6,
-      },
-      card: {
-        height: 120,
-        width: '100%',
-        borderRadius: 12,
-      },
-      chart: {
-        height: 200,
-        width: '100%',
-        borderRadius: 12,
-      },
-      circle: {
-        height: 48,
-        width: 48,
-        borderRadius: 24,
-      },
-    },
-  } as const,
-
-  defaultVariants: {
-    variant: 'text',
-  },
-});
-
-type SkeletonProps = GetProps<typeof SkeletonFrame>;
-
-export function Skeleton(props: SkeletonProps) {
+export function Skeleton({ variant = 'text' }: SkeletonProps) {
   const animatedValue = useRef(new Animated.Value(0.3)).current;
 
   useEffect(() => {
@@ -67,9 +28,35 @@ export function Skeleton(props: SkeletonProps) {
     return () => animation.stop();
   }, []);
 
+  const baseStyle: ViewStyle = {
+    backgroundColor: 'rgba(30, 41, 59, 0.5)',
+    borderRadius: 8,
+    overflow: 'hidden',
+  };
+
+  if (variant === 'text') {
+    baseStyle.height = 16;
+    baseStyle.width = '60%';
+    baseStyle.borderRadius = 4;
+  } else if (variant === 'title') {
+    baseStyle.height = 24;
+    baseStyle.width = '40%';
+    baseStyle.borderRadius = 6;
+  } else if (variant === 'card') {
+    baseStyle.height = 120;
+    baseStyle.width = '100%';
+    baseStyle.borderRadius = 12;
+  } else if (variant === 'chart') {
+    baseStyle.height = 200;
+    baseStyle.width = '100%';
+    baseStyle.borderRadius = 12;
+  } else if (variant === 'circle') {
+    baseStyle.height = 48;
+    baseStyle.width = 48;
+    baseStyle.borderRadius = 24;
+  }
+
   return (
-    <Animated.View style={{ opacity: animatedValue }}>
-      <SkeletonFrame {...props} />
-    </Animated.View>
+    <Animated.View style={[baseStyle, { opacity: animatedValue }]} />
   );
 }

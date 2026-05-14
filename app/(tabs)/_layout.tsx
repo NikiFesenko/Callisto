@@ -1,12 +1,12 @@
 // @ts-nocheck
-import React from 'react';
-import { Tabs, Link, usePathname } from 'expo-router';
-import { Platform, View, Text as RNText, StyleSheet, Pressable } from 'react-native';
+import { useOpenWalletModal } from '@/src/components/wallet/useOpenWalletModal';
 import { Colors } from '@/src/lib/constants';
+import { truncateAddress } from '@/src/lib/formatters';
 import { useAutomationStore } from '@/src/store/useAutomationStore';
 import { useWalletStore } from '@/src/store/useWalletStore';
-import { useOpenWalletModal } from '@/src/components/wallet/useOpenWalletModal';
-import { truncateAddress } from '@/src/lib/formatters';
+import { Link, Tabs, usePathname } from 'expo-router';
+import React from 'react';
+import { Platform, Pressable, Text as RNText, StyleSheet, View } from 'react-native';
 
 /**
  * Material Icon component for web.

@@ -15,7 +15,7 @@ export function useOpenWalletModal(): () => void {
   return useCallback(() => {
     // Check if the WalletSyncProvider has set the modal opener
     const state = useWalletStore.getState();
-    if (typeof state._setModalOpener === 'function') {
+    if (typeof (state as any).__modalOpener === 'function') {
       // The _setModalOpener was called, so openWalletModal should work
       storeOpener();
     } else {

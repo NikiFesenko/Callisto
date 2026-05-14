@@ -1,6 +1,6 @@
 // @ts-nocheck
 import React, { useState } from 'react';
-import { YStack, XStack, Text, Button, Input, Select } from 'tamagui';
+import { YStack, XStack, Text, Button, Input, Select } from '@/src/components/ui/core';
 import { GlassCard } from '@/src/components/ui/GlassCard';
 import { Colors, TOKEN_MINTS, TRADING } from '@/src/lib/constants';
 import { useAutomationStore, type MacroIndicator, type ComparisonOperator } from '@/src/store/useAutomationStore';

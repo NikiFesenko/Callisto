@@ -1,7 +1,7 @@
 // @ts-nocheck
 import React from 'react';
 import { Dimensions } from 'react-native';
-import { YStack, XStack, Text } from 'tamagui';
+import { YStack, XStack, Text } from '@/src/components/ui/core';
 import Svg, { Path, Circle, Text as SvgText, G } from 'react-native-svg';
 import { Colors } from '@/src/lib/constants';
 import { formatUSD } from '@/src/lib/formatters';
