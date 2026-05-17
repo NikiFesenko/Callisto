@@ -1,6 +1,5 @@
 // @ts-nocheck
 import React from 'react';
-import { ScrollView } from 'react-native';
 import { XStack, YStack } from '@/src/components/ui/core';
 import { KPICard } from './KPICard';
 import { useLatestFREDValue } from '@/src/api/fred';
@@ -19,8 +18,16 @@ export function KPIRow() {
 
   return (
     <YStack gap="$3">
-      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-        <XStack gap="$3" paddingHorizontal="$4" paddingVertical="$1">
+      <div
+        style={{
+          display: 'flex',
+          overflowX: 'auto',
+          WebkitOverflowScrolling: 'touch',
+          scrollbarWidth: 'none',
+          msOverflowStyle: 'none',
+        }}
+      >
+        <div style={{ display: 'flex', padding: '4px 16px', gap: 12 }}>
           <KPICard
             title="US CPI Index"
             value={cpi.currentValue}
@@ -71,8 +78,8 @@ export function KPIRow() {
               decimals={2}
             />
           )}
-        </XStack>
-      </ScrollView>
+        </div>
+      </div>
     </YStack>
   );
 }

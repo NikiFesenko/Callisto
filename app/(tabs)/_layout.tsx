@@ -39,6 +39,7 @@ const TAB_DEFS = [
   { name: 'index', title: 'Dashboard', icon: 'dashboard', href: '/' },
   { name: 'portfolio', title: 'Portfolio', icon: 'account_balance_wallet', href: '/portfolio' },
   { name: 'automations', title: 'Automations', icon: 'bolt', href: '/automations' },
+  { name: 'pricing', title: 'Pricing', icon: 'payments', href: '/pricing' },
   { name: 'settings', title: 'Settings', icon: 'settings', href: '/settings' },
 ] as const;
 
@@ -284,6 +285,7 @@ export default function TabLayout() {
         <Tabs.Screen name="index" options={{ title: 'Dashboard' }} />
         <Tabs.Screen name="portfolio" options={{ title: 'Portfolio' }} />
         <Tabs.Screen name="automations" options={{ title: 'Automations' }} />
+        <Tabs.Screen name="pricing" options={{ title: 'Pricing' }} />
         <Tabs.Screen name="settings" options={{ title: 'Settings' }} />
       </Tabs>
     );
@@ -323,6 +325,10 @@ export default function TabLayout() {
           tabBarBadge: triggeredCount > 0 ? triggeredCount : undefined,
           tabBarBadgeStyle: { backgroundColor: Colors.coralRed, fontSize: 10, minWidth: 18, height: 18 },
         }}
+      />
+      <Tabs.Screen
+        name="pricing"
+        options={{ title: 'Pricing', tabBarIcon: () => <RNText style={{ fontSize: 20 }}>💎</RNText> }}
       />
       <Tabs.Screen
         name="settings"

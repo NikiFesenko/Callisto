@@ -1,37 +1,17 @@
-// @ts-nocheck
-import React, { useEffect, useRef } from 'react';
-import { Animated, ViewStyle } from 'react-native';
+import React from 'react';
 
 interface SkeletonProps {
   variant?: 'text' | 'title' | 'card' | 'chart' | 'circle';
+  width?: number | string;
+  height?: number;
 }
 
-export function Skeleton({ variant = 'text' }: SkeletonProps) {
-  const animatedValue = useRef(new Animated.Value(0.3)).current;
-
-  useEffect(() => {
-    const animation = Animated.loop(
-      Animated.sequence([
-        Animated.timing(animatedValue, {
-          toValue: 0.7,
-          duration: 1000,
-          useNativeDriver: true,
-        }),
-        Animated.timing(animatedValue, {
-          toValue: 0.3,
-          duration: 1000,
-          useNativeDriver: true,
-        }),
-      ])
-    );
-    animation.start();
-    return () => animation.stop();
-  }, []);
-
-  const baseStyle: ViewStyle = {
+export function Skeleton({ variant = 'text', width: widthProp, height: heightProp }: SkeletonProps) {
+  const baseStyle: React.CSSProperties = {
     backgroundColor: 'rgba(30, 41, 59, 0.5)',
     borderRadius: 8,
     overflow: 'hidden',
+    animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
   };
 
   if (variant === 'text') {
@@ -56,7 +36,12 @@ export function Skeleton({ variant = 'text' }: SkeletonProps) {
     baseStyle.borderRadius = 24;
   }
 
+  if (widthProp != null) baseStyle.width = widthProp;
+  if (heightProp != null) baseStyle.height = heightProp;
+
   return (
-    <Animated.View style={[baseStyle, { opacity: animatedValue }]} />
+    <div style={baseStyle}>
+      <style>{`@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }`}</style>
+    </div>
   );
 }

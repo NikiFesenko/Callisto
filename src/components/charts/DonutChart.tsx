@@ -1,8 +1,6 @@
 // @ts-nocheck
 import React from 'react';
-import { Dimensions } from 'react-native';
 import { YStack, XStack, Text } from '@/src/components/ui/core';
-import Svg, { Path, Circle, Text as SvgText, G } from 'react-native-svg';
 import { Colors } from '@/src/lib/constants';
 import { formatUSD } from '@/src/lib/formatters';
 
@@ -84,9 +82,9 @@ export function DonutChart({
   return (
     <YStack alignItems="center" gap="$3">
       <YStack position="relative" width={size} height={size} alignItems="center" justifyContent="center">
-        <Svg width={size} height={size}>
+        <svg width={size} height={size}>
           {/* Background ring */}
-          <Circle
+          <circle
             cx={center}
             cy={center}
             r={radius - strokeWidth / 2}
@@ -97,7 +95,7 @@ export function DonutChart({
 
           {/* Arcs */}
           {arcs.map((arc, i) => (
-            <Path
+            <path
               key={i}
               d={describeArc(center, center, radius - strokeWidth / 2, arc.startAngle, arc.endAngle - 0.5)}
               fill="none"
@@ -106,7 +104,7 @@ export function DonutChart({
               strokeLinecap="round"
             />
           ))}
-        </Svg>
+        </svg>
 
         {/* Center text */}
         <YStack position="absolute" alignItems="center" justifyContent="center">

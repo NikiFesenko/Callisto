@@ -1,23 +1,32 @@
 // @ts-nocheck
 import { usePriceHistory } from '@/src/api/coingecko';
-import { useFREDSeries } from '@/src/api/fred';
+import { useFREDSeries, rangeToObservationStart } from '@/src/api/fred';
 import { ChartCard } from '@/src/components/charts/ChartCard';
 import { LineChart, type ChartDataPoint } from '@/src/components/charts/LineChart';
 import { KPIRow } from '@/src/components/dashboard/KPIRow';
 import { MacroOverlay } from '@/src/components/dashboard/MacroOverlay';
+import { NewsRow } from '@/src/components/dashboard/NewsRow';
 import { Text, YStack } from '@/src/components/ui/core';
 import { PageShell } from '@/src/components/ui/PageShell';
 import { Colors, FRED_SERIES } from '@/src/lib/constants';
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Platform } from 'react-native';
 
-
-
 export default function DashboardScreen() {
-  const { data: m2Data, isLoading: m2Loading } = useFREDSeries(FRED_SERIES.M2);
-  const { data: cpiData, isLoading: cpiLoading } = useFREDSeries(FRED_SERIES.CPI);
-  const { data: fedData, isLoading: fedLoading } = useFREDSeries(FRED_SERIES.FED_FUNDS);
-  const { data: btcPrices, isLoading: btcLoading } = usePriceHistory('bitcoin', '365');
+  const [btcRange, setBtcRange] = useState('1Y');
+  const [fedRange, setFedRange] = useState('1Y');
+  const [cpiRange, setCpiRange] = useState('1Y');
+
+  const { data: m2Data, isLoading: m2Loading } = useFREDSeries(FRED_SERIES.M2, {
+    observationStart: rangeToObservationStart(btcRange),
+  });
+  const { data: cpiData, isLoading: cpiLoading } = useFREDSeries(FRED_SERIES.CPI, {
+    observationStart: rangeToObservationStart(cpiRange),
+  });
+  const { data: fedData, isLoading: fedLoading } = useFREDSeries(FRED_SERIES.FED_FUNDS, {
+    observationStart: rangeToObservationStart(fedRange),
+  });
+  const { data: btcPrices, isLoading: btcLoading } = usePriceHistory('bitcoin', btcRange);
 
   // Memoize expensive data transforms
   const m2ChartData = useMemo<ChartDataPoint[]>(() =>
@@ -100,6 +109,8 @@ export default function DashboardScreen() {
               color={Colors.neonGreen}
               secondaryColor={Colors.indigo}
               isLoading={m2Loading || btcLoading}
+              selectedRange={btcRange}
+              onTimeRangeChange={setBtcRange}
             />
           </ChartCard>
         </YStack>
@@ -115,6 +126,8 @@ export default function DashboardScreen() {
               label="Fed Funds Rate"
               color={Colors.violet}
               isLoading={fedLoading}
+              selectedRange={fedRange}
+              onTimeRangeChange={setFedRange}
             />
           </ChartCard>
         </YStack>
@@ -130,6 +143,8 @@ export default function DashboardScreen() {
               label="CPI Index"
               color={Colors.coralRed}
               isLoading={cpiLoading}
+              selectedRange={cpiRange}
+              onTimeRangeChange={setCpiRange}
             />
           </ChartCard>
         </YStack>
@@ -137,6 +152,11 @@ export default function DashboardScreen() {
         {/* Macro Calendar */}
         <YStack paddingHorizontal="$4">
           <MacroOverlay />
+        </YStack>
+
+        {/* Crypto News Feed */}
+        <YStack paddingHorizontal="$4" paddingBottom="$8">
+          <NewsRow />
         </YStack>
       </YStack>
     </PageShell>

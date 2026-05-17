@@ -1,7 +1,7 @@
 /**
  * FRED (Federal Reserve Economic Data) API client.
- * All requests are proxied through a serverless function to protect API keys.
- * For development, we use mock data when the proxy is unavailable.
+ * Proxied through the serverless function at /api/fred to protect the API key.
+ * Falls back to realistic mock data when the proxy is unavailable.
  */
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { FRED_SERIES } from '@/src/lib/constants';
@@ -28,6 +28,23 @@ interface FREDQueryOptions {
   units?: 'lin' | 'chg' | 'ch1' | 'pch' | 'pc1' | 'pca' | 'cch' | 'cca' | 'log';
 }
 
+// Map UI range labels to observationStart dates
+export function rangeToObservationStart(range: string): string | undefined {
+  const now = new Date();
+  switch (range) {
+    case '1M': { const d = new Date(now); d.setMonth(d.getMonth() - 1); return d.toISOString().split('T')[0]; }
+    case '3M': { const d = new Date(now); d.setMonth(d.getMonth() - 3); return d.toISOString().split('T')[0]; }
+    case '6M': { const d = new Date(now); d.setMonth(d.getMonth() - 6); return d.toISOString().split('T')[0]; }
+    case '1Y': { const d = new Date(now); d.setFullYear(d.getFullYear() - 1); return d.toISOString().split('T')[0]; }
+    case '2Y': { const d = new Date(now); d.setFullYear(d.getFullYear() - 2); return d.toISOString().split('T')[0]; }
+    case '5Y': { const d = new Date(now); d.setFullYear(d.getFullYear() - 5); return d.toISOString().split('T')[0]; }
+    case 'ALL': return '2000-01-01';
+    default: return undefined;
+  }
+}
+
+// ─── Mock data generation ─────────────────────────────────────────────────────
+
 function generateMockTimeSeries(
   count: number,
   minVal: number,
@@ -40,7 +57,8 @@ function generateMockTimeSeries(
 
   for (let i = 0; i < count; i++) {
     const date = new Date(start);
-    date.setDate(date.getDate() + i * 7);
+    date.setDate(date.getDate() + i * 30); // monthly steps
+    if (date > new Date()) break;
     currentVal += (Math.random() - 0.45) * (maxVal - minVal) * 0.02;
     currentVal = Math.max(minVal, Math.min(maxVal, currentVal));
     observations.push({
@@ -51,23 +69,23 @@ function generateMockTimeSeries(
   return observations;
 }
 
-// Lazy mock data — only generated on first access, not at import time
 const MOCK_DATA_CACHE: Record<string, FREDObservation[]> = {};
 const MOCK_CONFIGS: Record<string, [number, number, number, string]> = {
-  [FRED_SERIES.CPI]: [300, 260, 315, '2022-01-01'],
-  [FRED_SERIES.FED_FUNDS]: [300, 0.25, 5.50, '2022-01-01'],
-  [FRED_SERIES.M2]: [300, 15000, 21500, '2022-01-01'],
-  [FRED_SERIES.GDP]: [60, 22000, 28500, '2022-01-01'],
-  [FRED_SERIES.UNEMPLOYMENT]: [300, 3.4, 4.2, '2022-01-01'],
-  [FRED_SERIES.TREASURY_10Y]: [300, 1.5, 4.8, '2022-01-01'],
-  [FRED_SERIES.CORE_CPI]: [300, 280, 320, '2022-01-01'],
+  [FRED_SERIES.CPI]:          [60, 298,  320,  '2020-01-01'],
+  [FRED_SERIES.FED_FUNDS]:    [60, 0.08, 5.50, '2020-01-01'],
+  [FRED_SERIES.M2]:           [60, 15500, 21600, '2020-01-01'],
+  [FRED_SERIES.GDP]:          [20, 21000, 29000, '2020-01-01'],
+  [FRED_SERIES.UNEMPLOYMENT]: [60, 3.4,  4.2,  '2020-01-01'],
+  [FRED_SERIES.TREASURY_10Y]: [60, 0.5,  4.8,  '2020-01-01'],
+  [FRED_SERIES.CORE_CPI]:     [60, 260,  322,  '2020-01-01'],
 };
+
 function getMockData(seriesId: string): FREDObservation[] {
   if (!MOCK_DATA_CACHE[seriesId]) {
     const cfg = MOCK_CONFIGS[seriesId];
     MOCK_DATA_CACHE[seriesId] = cfg
       ? generateMockTimeSeries(...cfg)
-      : generateMockTimeSeries(100, 0, 100, '2022-01-01');
+      : generateMockTimeSeries(60, 0, 100, '2020-01-01');
   }
   return MOCK_DATA_CACHE[seriesId];
 }
@@ -75,9 +93,9 @@ function getMockData(seriesId: string): FREDObservation[] {
 function getMockResponse(seriesId: string): FREDSeriesResponse {
   const mockObs = getMockData(seriesId);
   return {
-    realtime_start: '2022-01-01',
+    realtime_start: '2020-01-01',
     realtime_end: new Date().toISOString().split('T')[0],
-    observation_start: mockObs[0]?.date || '2022-01-01',
+    observation_start: mockObs[0]?.date || '2020-01-01',
     observation_end: mockObs[mockObs.length - 1]?.date || new Date().toISOString().split('T')[0],
     units: 'lin',
     count: mockObs.length,
@@ -85,43 +103,40 @@ function getMockResponse(seriesId: string): FREDSeriesResponse {
   };
 }
 
-// Set to false to try real API proxy, true to always use mock data
-const USE_MOCK = true;
+// ─── Real FRED API via proxy ──────────────────────────────────────────────────
 
 async function fetchFREDSeries(
   seriesId: string,
-  _options?: FREDQueryOptions
+  options?: FREDQueryOptions
 ): Promise<FREDSeriesResponse> {
-  // Use mock data in dev (no proxy available)
-  if (USE_MOCK) {
-    return getMockResponse(seriesId);
-  }
-
   try {
-    const params = new URLSearchParams({
-      series_id: seriesId,
-      ...(_options?.observationStart && { observation_start: _options.observationStart }),
-      ...(_options?.observationEnd && { observation_end: _options.observationEnd }),
-      ...(_options?.frequency && { frequency: _options.frequency }),
-      ...(_options?.units && { units: _options.units }),
-    });
+    const params = new URLSearchParams({ series_id: seriesId });
+    if (options?.observationStart) params.set('observation_start', options.observationStart);
+    if (options?.observationEnd)   params.set('observation_end',   options.observationEnd);
+    if (options?.frequency)        params.set('frequency',         options.frequency);
+    if (options?.units)            params.set('units',             options.units);
 
-    const response = await fetch(`/api/fred?${params}`);
-    if (!response.ok) throw new Error(`FRED API error: ${response.status}`);
+    const response = await fetch(`/api/fred?${params}`, {
+      headers: { 'Accept': 'application/json' },
+    });
+    if (!response.ok) throw new Error(`FRED proxy ${response.status}`);
     const data = await response.json();
-    if (!data.observations) throw new Error('Invalid FRED response');
+    if (!data.observations) throw new Error('Invalid FRED response (no observations)');
     return data;
-  } catch {
+  } catch (e) {
+    console.warn(`[FRED] Proxy unavailable for ${seriesId}, using mock:`, e);
     return getMockResponse(seriesId);
   }
 }
+
+// ─── React Query hooks ────────────────────────────────────────────────────────
 
 export function useFREDSeries(seriesId: string, options?: FREDQueryOptions) {
   return useQuery({
     queryKey: ['fred', seriesId, options],
     queryFn: () => fetchFREDSeries(seriesId, options),
-    staleTime: 60 * 60 * 1000,
-    gcTime: 4 * 60 * 60 * 1000,
+    staleTime: 60 * 60 * 1000,     // 1 hour
+    gcTime: 4 * 60 * 60 * 1000,    // 4 hours
     placeholderData: keepPreviousData,
     initialData: getMockResponse(seriesId),
   });
@@ -130,8 +145,9 @@ export function useFREDSeries(seriesId: string, options?: FREDQueryOptions) {
 export function useLatestFREDValue(seriesId: string) {
   const { data, ...rest } = useFREDSeries(seriesId);
   const observations = data?.observations || [];
-  const latest = observations[observations.length - 1];
-  const previous = observations[observations.length - 2];
+  const validObs = observations.filter(o => o.value !== '.');
+  const latest = validObs[validObs.length - 1];
+  const previous = validObs[validObs.length - 2];
 
   const currentValue = latest ? parseFloat(latest.value) : null;
   const previousValue = previous ? parseFloat(previous.value) : null;

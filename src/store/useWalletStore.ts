@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { create } from 'zustand';
-import { Platform } from 'react-native';
+
 
 /**
  * Wallet store that bridges the @solana/wallet-adapter-react hooks
@@ -9,7 +9,7 @@ import { Platform } from 'react-native';
  * On web, the actual connection is handled by the wallet adapter providers.
  * This store provides:
  *  - Synced state (publicKey, connected, wallet name)
- *  - openWalletModal() to trigger the adapter's wallet selection modal
+ *  - openWalletModal() to trigger the custom WalletSelectModal
  *  - disconnect() to disconnect the current wallet
  */
 
@@ -29,7 +29,7 @@ interface WalletState {
   disconnect: () => void;
   setError: (error: string | null) => void;
 
-  // Internal — called by the WalletSyncProvider to keep zustand in sync
+  // Internal — called by WalletSelectModal and WalletSyncProvider
   _syncFromAdapter: (state: {
     publicKey: string | null;
     connected: boolean;
@@ -37,9 +37,14 @@ interface WalletState {
     walletName: string | null;
     walletIcon: string | null;
   }) => void;
-  _setModalOpener: (opener: () => void) => void;
+  _setModalOpener: (opener: (() => void) | null) => void;
   _setDisconnect: (disconnecter: () => void) => void;
 }
+
+// Module-level refs for callbacks — stored OUTSIDE Zustand to survive state updates
+// (Zustand recreates the state object on every update, which would lose non-state properties)
+let _modalOpener: (() => void) | null = null;
+let _disconnecter: (() => void) | null = null;
 
 export const useWalletStore = create<WalletState>((set, get) => ({
   publicKey: null,
@@ -51,18 +56,16 @@ export const useWalletStore = create<WalletState>((set, get) => ({
   error: null,
 
   openWalletModal: () => {
-    const opener = (get() as any).__modalOpener;
-    if (opener) {
-      opener();
-    } else if (Platform.OS === 'web') {
-      console.warn('Wallet modal opener not ready yet');
+    if (typeof _modalOpener === 'function') {
+      _modalOpener();
+    } else if (typeof window !== 'undefined') {
+      console.warn('[WalletStore] openWalletModal called but no modal opener registered yet');
     }
   },
 
   disconnect: () => {
-    const disconnecter = (get() as any).__disconnecter;
-    if (disconnecter) {
-      disconnecter();
+    if (typeof _disconnecter === 'function') {
+      _disconnecter();
     }
     set({
       publicKey: null,
@@ -89,11 +92,10 @@ export const useWalletStore = create<WalletState>((set, get) => ({
   },
 
   _setModalOpener: (opener) => {
-    // Store as a non-reactive internal ref
-    (get() as any).__modalOpener = opener;
+    _modalOpener = opener;
   },
 
   _setDisconnect: (disconnecter) => {
-    (get() as any).__disconnecter = disconnecter;
+    _disconnecter = disconnecter;
   },
 }));

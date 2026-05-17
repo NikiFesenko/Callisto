@@ -1,7 +1,5 @@
-// @ts-nocheck
-import React, { useEffect, useRef } from 'react';
-import { Animated } from 'react-native';
-import { Text, GetProps } from '@/src/components/ui/core';
+import React, { useEffect, useRef, useState } from 'react';
+import { Text } from '@/src/components/ui/core';
 
 interface AnimatedCounterProps {
   value: number;
@@ -24,30 +22,33 @@ export function AnimatedCounter({
   color = '#E2E8F0',
   fontWeight = '700',
 }: AnimatedCounterProps) {
-  const animatedValue = useRef(new Animated.Value(0)).current;
-  const [displayValue, setDisplayValue] = React.useState(value);
+  const [displayValue, setDisplayValue] = useState(value);
   const previousValue = useRef(value);
 
   useEffect(() => {
     const from = previousValue.current;
     const to = value;
     previousValue.current = value;
+    
+    if (from === to) return;
 
-    animatedValue.setValue(0);
-    Animated.timing(animatedValue, {
-      toValue: 1,
-      duration,
-      useNativeDriver: false,
-    }).start();
+    let startTime: number;
+    let animationFrameId: number;
 
-    const listener = animatedValue.addListener(({ value: progress }) => {
-      const current = from + (to - from) * progress;
-      setDisplayValue(current);
-    });
-
-    return () => {
-      animatedValue.removeListener(listener);
+    const animate = (time: number) => {
+      if (!startTime) startTime = time;
+      const progress = Math.min((time - startTime) / duration, 1);
+      
+      setDisplayValue(from + (to - from) * progress);
+      
+      if (progress < 1) {
+        animationFrameId = requestAnimationFrame(animate);
+      }
     };
+
+    animationFrameId = requestAnimationFrame(animate);
+
+    return () => cancelAnimationFrame(animationFrameId);
   }, [value, duration]);
 
   const formattedValue = displayValue.toLocaleString('en-US', {
@@ -61,7 +62,7 @@ export function AnimatedCounter({
       fontSize={fontSize}
       fontWeight={fontWeight as any}
       color={color}
-      accessibilityLabel={`${prefix}${formattedValue}${suffix}`}
+      aria-label={`${prefix}${formattedValue}${suffix}`}
     >
       {prefix}{formattedValue}{suffix}
     </Text>
