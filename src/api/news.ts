@@ -144,6 +144,5 @@ export function useCryptoNews() {
     gcTime: 30 * 60 * 1000,
     refetchInterval: 5 * 60 * 1000,  // refresh every 5 min
     placeholderData: keepPreviousData,
-    initialData: FALLBACK_NEWS,
   });
 }

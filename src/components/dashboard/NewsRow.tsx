@@ -1,8 +1,7 @@
 // @ts-nocheck
 /**
  * NewsRow — Scrollable crypto news feed card for the dashboard.
- * Displays real headlines with sentiment color coding, source, time ago,
- * and opens original article on press.
+ * Redesigned as a modern vertical feed to avoid truncation and provide a premium reading experience.
  */
 import React from 'react';
 import { YStack, XStack, Text } from '@/src/components/ui/core';
@@ -24,12 +23,6 @@ const SENTIMENT_DOT = {
   neutral: '●',
 };
 
-function openUrl(url: string) {
-  if (typeof window !== 'undefined') {
-    window.open(url, '_blank', 'noopener,noreferrer');
-  }
-}
-
 function NewsCard({ item }: { item: NewsItem }) {
   const sentiment = item.sentiment || 'neutral';
   const sentColor = SENTIMENT_COLOR[sentiment];
@@ -39,68 +32,60 @@ function NewsCard({ item }: { item: NewsItem }) {
       href={item.url}
       target="_blank"
       rel="noopener noreferrer"
-      className="shrink-0 transition-all duration-200 hover:-translate-y-1"
-      style={{
-        textDecoration: 'none',
-        display: 'block',
-        cursor: 'pointer',
-      }}
+      className="block group"
+      style={{ textDecoration: 'none', cursor: 'pointer' }}
       aria-label={item.title}
     >
-      <YStack
-        width={260}
-        backgroundColor={Colors.bgElevated}
-        borderRadius={12}
-        padding="$3"
-        gap="$2"
-        borderWidth={1}
-        borderColor={Colors.borderSubtle}
+      <div
+        className="flex flex-col p-4 gap-3 rounded-2xl border bg-[#111827]/40 transition-all duration-300"
         style={{
-          transition: 'border-color 0.2s, box-shadow 0.2s',
-        } as any}
+          borderColor: Colors.borderSubtle,
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.backgroundColor = 'rgba(26, 34, 53, 0.8)';
+          e.currentTarget.style.borderColor = Colors.border;
+          e.currentTarget.style.transform = 'translateY(-2px)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.backgroundColor = 'rgba(17, 24, 39, 0.4)';
+          e.currentTarget.style.borderColor = Colors.borderSubtle;
+          e.currentTarget.style.transform = 'translateY(0px)';
+        }}
       >
         {/* Header row */}
-        <XStack justifyContent="space-between" alignItems="center">
-          <XStack gap="$1.5" alignItems="center" flex={1}>
-            <Text fontSize={10} color={Colors.textMuted} numberOfLines={1}>
+        <div className="flex flex-row justify-between items-center">
+          <div className="flex flex-row items-center gap-2">
+            <span className="text-[11px] font-medium text-[#64748B]">
               {item.source}
-            </Text>
+            </span>
             {item.currencies && item.currencies.length > 0 && (
-              <XStack gap="$1">
+              <div className="flex flex-row gap-1.5">
                 {item.currencies.slice(0, 2).map(c => (
-                  <YStack
+                  <span
                     key={c}
-                    paddingHorizontal={5}
-                    paddingVertical={1}
-                    borderRadius={4}
-                    backgroundColor={Colors.bgHover}
+                    className="text-[9px] font-bold text-[#6366F1] bg-[#1A2235] px-1.5 py-0.5 rounded uppercase tracking-wide"
                   >
-                    <Text fontSize={9} fontWeight="700" color={Colors.indigo}>{c}</Text>
-                  </YStack>
+                    {c}
+                  </span>
                 ))}
-              </XStack>
+              </div>
             )}
-          </XStack>
-          <XStack gap="$1" alignItems="center">
-            <Text fontSize={10} color={sentColor}>{SENTIMENT_DOT[sentiment]}</Text>
-            <Text fontSize={10} color={Colors.textMuted}>{timeAgo(item.publishedAt)}</Text>
-          </XStack>
-        </XStack>
+          </div>
+          <div className="flex flex-row items-center gap-1.5">
+            <span className="text-[10px]" style={{ color: sentColor }}>
+              {SENTIMENT_DOT[sentiment]}
+            </span>
+            <span className="text-[11px] text-[#64748B]">
+              {timeAgo(item.publishedAt)}
+            </span>
+          </div>
+        </div>
 
         {/* Headline */}
-        <Text
-          fontSize={13}
-          fontWeight="500"
-          color={Colors.textPrimary}
-          numberOfLines={3}
-          lineHeight={18}
-        >
+        <span className="text-[14px] font-medium text-[#E2E8F0] leading-[22px] group-hover:text-white transition-colors">
           {item.title}
-        </Text>
-
-        {/* Read more hint */}
-        <Text fontSize={10} color={Colors.indigo}>Read more →</Text>
-      </YStack>
+        </span>
+      </div>
     </a>
   );
 }
@@ -115,13 +100,13 @@ export function NewsRow() {
         <XStack
           justifyContent="space-between"
           alignItems="center"
-          padding="$3"
+          padding="$4"
           borderBottomWidth={1}
           borderBottomColor={Colors.borderSubtle}
         >
           <XStack gap="$2" alignItems="center">
             <Text fontSize={16} fontWeight="600" color={Colors.textPrimary}>
-              Crypto News
+              Market Intelligence
             </Text>
             <YStack
               width={6}
@@ -134,33 +119,41 @@ export function NewsRow() {
               } as any}
             />
           </XStack>
-          <StatusBadge label="Live" variant="positive" size="sm" />
+          <StatusBadge label="Live Feed" variant="positive" size="sm" />
         </XStack>
 
-        {/* Scrollable cards */}
+        {/* Vertical Scrollable Feed */}
         <div
+          className="flex flex-col p-4 gap-3 overflow-y-auto"
           style={{
-            display: 'flex',
-            overflowX: 'auto',
-            WebkitOverflowScrolling: 'touch',
-            scrollbarWidth: 'none',
-            msOverflowStyle: 'none',
+            maxHeight: '460px',
+            scrollbarWidth: 'none', // Firefox
+            msOverflowStyle: 'none', // IE
           }}
         >
-          <div style={{ display: 'flex', padding: '12px', gap: '12px' }}>
-            {isLoading
-              ? Array.from({ length: 3 }).map((_, i) => (
-                  <YStack key={i} width={260} gap="$2">
-                    <Skeleton variant="text" width="40%" />
-                    <Skeleton variant="text" width="100%" />
-                    <Skeleton variant="text" width="90%" />
-                    <Skeleton variant="text" width="60%" />
-                  </YStack>
-                ))
-              : news.map(item => (
-                  <NewsCard key={item.id} item={item} />
-                ))}
-          </div>
+          <style>{`.overflow-y-auto::-webkit-scrollbar { display: none; }`}</style>
+          
+          {isLoading
+            ? Array.from({ length: 4 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="flex flex-col p-4 gap-3 rounded-2xl border"
+                  style={{ borderColor: Colors.borderSubtle, backgroundColor: 'rgba(17, 24, 39, 0.4)' }}
+                >
+                  <Skeleton variant="text" width="40%" />
+                  <Skeleton variant="text" width="100%" />
+                  <Skeleton variant="text" width="80%" />
+                </div>
+              ))
+            : news.map((item, i) => (
+                <NewsCard key={`${item.id}-${i}`} item={item} />
+              ))}
+              
+          {!isLoading && news.length === 0 && (
+            <div className="flex py-8 justify-center items-center">
+              <span className="text-[#64748B] text-sm">No recent news available.</span>
+            </div>
+          )}
         </div>
       </YStack>
     </GlassCard>

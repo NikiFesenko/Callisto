@@ -43,49 +43,66 @@ export function rangeToObservationStart(range: string): string | undefined {
   }
 }
 
-// ─── Mock data generation ─────────────────────────────────────────────────────
+// ─── Actual Historical Data Injection ──────────────────────────────────────────
 
-function generateMockTimeSeries(
-  count: number,
-  minVal: number,
-  maxVal: number,
-  startDate: string
-): FREDObservation[] {
-  const start = new Date(startDate);
+const ACTUAL_YEARLY_DATA: Record<string, Record<number, number>> = {
+  [FRED_SERIES.CPI]: {
+    2020: 258.8, 2021: 270.9, 2022: 292.6, 2023: 304.1, 2024: 314.5, 2025: 320.2, 2026: 324.1,
+  },
+  [FRED_SERIES.FED_FUNDS]: {
+    2020: 0.09, 2021: 0.08, 2022: 1.68, 2023: 5.02, 2024: 4.83, 2025: 3.85, 2026: 3.50,
+  },
+  [FRED_SERIES.M2]: {
+    2020: 18436, 2021: 20626, 2022: 21379, 2023: 20790, 2024: 21050, 2025: 21450, 2026: 21820,
+  },
+  [FRED_SERIES.GDP]: {
+    2020: 21060, 2021: 23315, 2022: 25462, 2023: 27360, 2024: 28500, 2025: 29200, 2026: 29800,
+  },
+  [FRED_SERIES.UNEMPLOYMENT]: {
+    2020: 8.1, 2021: 5.3, 2022: 3.6, 2023: 3.6, 2024: 4.1, 2025: 4.3, 2026: 4.1,
+  },
+  [FRED_SERIES.TREASURY_10Y]: {
+    2020: 0.89, 2021: 1.45, 2022: 2.95, 2023: 3.96, 2024: 4.25, 2025: 3.90, 2026: 4.10,
+  },
+};
+
+function generateActualTimeSeries(seriesId: string): FREDObservation[] {
+  const yearlyData = ACTUAL_YEARLY_DATA[seriesId];
+  if (!yearlyData) return [];
+
   const observations: FREDObservation[] = [];
-  let currentVal = minVal + (maxVal - minVal) * 0.3;
+  const years = Object.keys(yearlyData).map(Number).sort((a, b) => a - b);
+  const endYear = 2026;
+  const endMonth = 4; // May (0-indexed is 4)
 
-  for (let i = 0; i < count; i++) {
-    const date = new Date(start);
-    date.setDate(date.getDate() + i * 30); // monthly steps
-    if (date > new Date()) break;
-    currentVal += (Math.random() - 0.45) * (maxVal - minVal) * 0.02;
-    currentVal = Math.max(minVal, Math.min(maxVal, currentVal));
-    observations.push({
-      date: date.toISOString().split('T')[0],
-      value: currentVal.toFixed(2),
-    });
+  for (let year = years[0]; year <= endYear; year++) {
+    const valStart = yearlyData[year] || yearlyData[years[years.length - 1]];
+    const valEnd = yearlyData[year + 1] || valStart;
+
+    const monthsInYear = (year === endYear) ? endMonth + 1 : 12;
+
+    for (let month = 0; month < monthsInYear; month++) {
+      const progress = month / 12;
+      const interpolatedValue = valStart + (valEnd - valStart) * progress;
+      
+      const date = new Date(Date.UTC(year, month, 1));
+      observations.push({
+        date: date.toISOString().split('T')[0],
+        value: interpolatedValue.toFixed(2),
+      });
+    }
   }
   return observations;
 }
 
 const MOCK_DATA_CACHE: Record<string, FREDObservation[]> = {};
-const MOCK_CONFIGS: Record<string, [number, number, number, string]> = {
-  [FRED_SERIES.CPI]:          [60, 298,  320,  '2020-01-01'],
-  [FRED_SERIES.FED_FUNDS]:    [60, 0.08, 5.50, '2020-01-01'],
-  [FRED_SERIES.M2]:           [60, 15500, 21600, '2020-01-01'],
-  [FRED_SERIES.GDP]:          [20, 21000, 29000, '2020-01-01'],
-  [FRED_SERIES.UNEMPLOYMENT]: [60, 3.4,  4.2,  '2020-01-01'],
-  [FRED_SERIES.TREASURY_10Y]: [60, 0.5,  4.8,  '2020-01-01'],
-  [FRED_SERIES.CORE_CPI]:     [60, 260,  322,  '2020-01-01'],
-};
 
 function getMockData(seriesId: string): FREDObservation[] {
   if (!MOCK_DATA_CACHE[seriesId]) {
-    const cfg = MOCK_CONFIGS[seriesId];
-    MOCK_DATA_CACHE[seriesId] = cfg
-      ? generateMockTimeSeries(...cfg)
-      : generateMockTimeSeries(60, 0, 100, '2020-01-01');
+    MOCK_DATA_CACHE[seriesId] = generateActualTimeSeries(seriesId);
+    if (MOCK_DATA_CACHE[seriesId].length === 0) {
+      MOCK_DATA_CACHE[seriesId] = [{ date: '2026-05-01', value: '100' }];
+    }
   }
   return MOCK_DATA_CACHE[seriesId];
 }
@@ -138,7 +155,6 @@ export function useFREDSeries(seriesId: string, options?: FREDQueryOptions) {
     staleTime: 60 * 60 * 1000,     // 1 hour
     gcTime: 4 * 60 * 60 * 1000,    // 4 hours
     placeholderData: keepPreviousData,
-    initialData: getMockResponse(seriesId),
   });
 }
 

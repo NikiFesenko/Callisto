@@ -138,7 +138,6 @@ export function usePriceHistory(coinId: string, days: string = '365') {
     staleTime: 5 * 60 * 1000,      // 5 min
     gcTime: 30 * 60 * 1000,         // 30 min
     placeholderData: keepPreviousData,
-    initialData: getMockHistory(coinId, cgDays),
   });
 }
 
@@ -149,6 +148,5 @@ export function useMarketData() {
     staleTime: 60 * 1000,
     refetchInterval: 60 * 1000,    // refresh every 60s
     gcTime: 5 * 60 * 1000,
-    initialData: MOCK_MARKET_DATA,
   });
 }
