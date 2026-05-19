@@ -6,6 +6,7 @@ import { SolanaWalletProvider } from '@/src/components/wallet/SolanaWalletProvid
 import DashboardScreen from '../app/(tabs)/index';
 import PortfolioScreen from '../app/(tabs)/portfolio';
 import AutomationsScreen from '../app/(tabs)/automations';
+import CreateAutomationScreen from '../app/create-automation';
 import PricingScreen from '../app/(tabs)/pricing';
 import SettingsScreen from '../app/(tabs)/settings';
 
@@ -130,6 +131,7 @@ export default function App() {
               <Route index element={<DashboardScreen />} />
               <Route path="portfolio" element={<PortfolioScreen />} />
               <Route path="automations" element={<AutomationsScreen />} />
+              <Route path="create-automation" element={<CreateAutomationScreen />} />
               <Route path="pricing" element={<PricingScreen />} />
               <Route path="settings" element={<SettingsScreen />} />
             </Route>

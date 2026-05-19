@@ -1,6 +1,5 @@
 // @ts-nocheck
 import { TriggerCard } from '@/src/components/automations/TriggerCard';
-import { TriggerForm } from '@/src/components/automations/TriggerForm';
 import { Button, Text, XStack, YStack } from '@/src/components/ui/core';
 import { PageShell } from '@/src/components/ui/PageShell';
 import { Colors } from '@/src/lib/constants';
@@ -12,8 +11,10 @@ type FilterTab = 'all' | 'active' | 'triggered' | 'executed';
 
 
 
+import { useNavigate } from 'react-router-dom';
+
 export default function AutomationsScreen() {
-  const [showForm, setShowForm] = useState(false);
+  const navigate = useNavigate();
   const [activeFilter, setActiveFilter] = useState<FilterTab>('all');
   const { automations } = useAutomationStore();
 
@@ -58,21 +59,17 @@ export default function AutomationsScreen() {
           </XStack>
         </ScrollView>
 
-        {/* New automation form or button */}
+        {/* New automation button */}
         <YStack paddingHorizontal="$4">
-          {showForm ? (
-            <TriggerForm onClose={() => setShowForm(false)} />
-          ) : (
             <Button size="$4" backgroundColor={Colors.indigo}
               pressStyle={{ backgroundColor: Colors.violet, scale: 0.98 }}
               animation="quick" borderRadius={12}
-              onPress={() => setShowForm(true)} accessibilityLabel="Create new automation">
+              onPress={() => navigate('/create-automation')} accessibilityLabel="Create new automation">
               <XStack gap="$2" alignItems="center">
                 <Text fontSize={18}>⚡</Text>
                 <Text fontSize={15} fontWeight="700" color="#FFF">New Automation</Text>
               </XStack>
             </Button>
-          )}
         </YStack>
 
         {/* Automation list */}
