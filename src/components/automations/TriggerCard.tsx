@@ -24,7 +24,7 @@ export function TriggerCard({ automation }: { automation: Automation }) {
   const glowVal = automation.status === 'executed' ? 'green' as const : automation.status === 'failed' ? 'red' as const : undefined;
 
   return (
-    <GlassCard glow={glowVal} pressStyle={{ scale: 0.99 }} animation="quick"
+    <GlassCard glow={glowVal} className="trigger-card-premium" pressStyle={{ scale: 0.99 }} animation="quick"
       accessibilityLabel={`Automation: ${automation.name}. ${conditionText}. ${actionText}`}>
       <YStack gap="$2.5">
         <XStack justifyContent="space-between" alignItems="center">
@@ -32,14 +32,31 @@ export function TriggerCard({ automation }: { automation: Automation }) {
             <Text fontSize={15} fontWeight="600" color={Colors.textPrimary} numberOfLines={1}>{automation.name}</Text>
             <StatusBadge label={automation.status.toUpperCase()} variant={STATUS_VARIANTS[automation.status]} size="sm" />
           </XStack>
-          <Switch size="$2" checked={automation.enabled} onCheckedChange={() => toggleAutomation(automation.id)}
-            backgroundColor={automation.enabled ? Colors.neonGreenDim : Colors.bgElevated} accessibilityLabel={`Toggle ${automation.name}`}>
-            <Switch.Thumb animation="quick" backgroundColor={Colors.textPrimary} />
-          </Switch>
+          <Switch size="$2" value={automation.enabled} onValueChange={() => toggleAutomation(automation.id)}
+            trackColor={{ true: Colors.neonGreenDim, false: Colors.bgElevated }} thumbColor={Colors.textPrimary}
+            accessibilityLabel={`Toggle ${automation.name}`} />
         </XStack>
-        <YStack backgroundColor={Colors.bgDeep} padding="$2.5" borderRadius={10} gap="$1">
-          <Text fontSize={13} fontFamily="$mono" fontWeight="600" color={Colors.indigo}>{conditionText}</Text>
-          <Text fontSize={13} fontFamily="$mono" fontWeight="600" color={Colors.neonGreen}>{actionText}</Text>
+        <YStack backgroundColor={Colors.bgDeep} padding="$3" borderRadius={12} gap="$2" borderWidth={1} borderColor={Colors.borderSubtle}>
+          <XStack justifyContent="space-between" alignItems="center">
+            <XStack gap="$2" alignItems="center">
+              <Text fontSize={16}>{automation.action.inputSymbol === 'USDC' ? '↗️' : '↘️'}</Text>
+              <Text fontSize={12} fontWeight="700" color={automation.action.inputSymbol === 'USDC' ? Colors.neonGreen : Colors.coralRed}>
+                {automation.action.inputSymbol === 'USDC' ? 'LONG' : 'SHORT'}
+              </Text>
+            </XStack>
+            <YStack backgroundColor={Colors.bgHover} paddingHorizontal="$2" paddingVertical="$1" borderRadius={4}>
+              <Text fontSize={10} color={Colors.textSecondary}>Max Slippage: {automation.action.slippageBps / 100}%</Text>
+            </YStack>
+          </XStack>
+          
+          <YStack gap="$1" marginTop="$1">
+            <Text fontSize={12} fontFamily="$mono" fontWeight="600" color={Colors.textPrimary}>
+              <Text color={Colors.textMuted}>IF</Text> {INDICATOR_LABELS[automation.condition.indicator] || automation.condition.indicator} {automation.condition.operator} {automation.condition.threshold}
+            </Text>
+            <Text fontSize={12} fontFamily="$mono" fontWeight="600" color={Colors.textPrimary}>
+              <Text color={Colors.textMuted}>THEN</Text> Swap {automation.action.amount} {automation.action.inputSymbol} → {automation.action.outputSymbol}
+            </Text>
+          </YStack>
         </YStack>
         <XStack justifyContent="space-between" alignItems="center">
           <YStack gap={2}>

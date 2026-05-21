@@ -2,21 +2,21 @@
 // These are used outside of Tamagui style props (charts, SVGs, raw styles)
 
 export const Colors = {
-  bgDeep: '#060A12',
-  bgBase: '#0A0E17',
-  bgSoft: '#111827',
-  bgHover: '#1A2235',
-  bgElevated: '#1E293B',
-  border: '#1E293B',
-  borderSubtle: '#162032',
+  bgDeep: '#050505', // Thirdweb ultra-dark
+  bgBase: '#09090b', // Zinc 950
+  bgSoft: '#18181b', // Zinc 900
+  bgHover: '#27272a', // Zinc 800
+  bgElevated: '#18181b',
+  border: '#27272a', // Subtle 1px lines
+  borderSubtle: '#18181b',
 
-  textPrimary: '#E2E8F0',
-  textSecondary: '#94A3B8',
-  textMuted: '#64748B',
+  textPrimary: '#FAFAFA',
+  textSecondary: '#A1A1AA',
+  textMuted: '#71717A',
 
-  neonGreen: '#00FF88',
-  neonGreenDim: '#00CC6A',
-  neonGreenGlow: 'rgba(0, 255, 136, 0.15)',
+  neonGreen: '#00FFA3', // Solana green
+  neonGreenDim: '#00CC82',
+  neonGreenGlow: 'rgba(0, 255, 163, 0.15)',
   coralRed: '#FF4D6A',
   coralRedDim: '#E0435E',
   coralRedGlow: 'rgba(255, 77, 106, 0.15)',
@@ -24,9 +24,13 @@ export const Colors = {
   indigo: '#6366F1',
   indigoGlow: 'rgba(99, 102, 241, 0.2)',
   violet: '#8B5CF6',
+  
+  // Solflare-inspired vibrant gradients
+  gradientPrimary: 'linear-gradient(135deg, #8B5CF6 0%, #00FFA3 100%)',
+  gradientSecondary: 'linear-gradient(135deg, #F97316 0%, #EAB308 100%)',
 
-  glassBg: 'rgba(17, 24, 39, 0.7)',
-  glassHover: 'rgba(26, 34, 53, 0.8)',
+  glassBg: 'rgba(9, 9, 11, 0.65)',
+  glassHover: 'rgba(24, 24, 27, 0.75)',
 } as const;
 
 // FRED series IDs used across the app

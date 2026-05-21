@@ -35,7 +35,7 @@ const RISK_PROFILES = [
 
 export default function CreateAutomationScreen() {
   const navigate = useNavigate();
-  const { connected } = useWalletStore();
+  const { connected, publicKey } = useWalletStore();
   const { addAutomation } = useAutomationStore();
 
   // Form State
@@ -46,6 +46,7 @@ export default function CreateAutomationScreen() {
   const [threshold, setThreshold] = useState('');
   const [amount, setAmount] = useState('');
   const [riskProfile, setRiskProfile] = useState('moderate');
+  const [isSuccess, setIsSuccess] = useState(false);
 
   const isWeb = Platform.OS === 'web';
   const isValid = name.length > 0 && threshold.length > 0 && amount.length > 0;
@@ -69,6 +70,7 @@ export default function CreateAutomationScreen() {
 
     addAutomation({
       name,
+      walletAddress: publicKey || undefined,
       condition: { indicator, operator, threshold: parseFloat(threshold) },
       action: {
         type: 'swap',
@@ -80,11 +82,23 @@ export default function CreateAutomationScreen() {
       enabled: true,
     });
     
-    navigate(-1);
+    setIsSuccess(true);
+    setTimeout(() => {
+      navigate('/portfolio');
+    }, 1500);
   };
 
   return (
     <PageShell>
+      {isSuccess && (
+        <YStack position="absolute" top={0} left={0} right={0} bottom={0} zIndex={1000} backgroundColor="rgba(0,0,0,0.85)" alignItems="center" justifyContent="center">
+          <YStack alignItems="center" gap="$4" animation="quick">
+            <Text fontSize={72}>🚀</Text>
+            <Text fontSize={28} fontWeight="800" color={Colors.neonGreen}>Bot Deployed!</Text>
+            <Text fontSize={16} color={Colors.textSecondary}>Redirecting to your portfolio...</Text>
+          </YStack>
+        </YStack>
+      )}
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
         <YStack gap="$6" paddingHorizontal="$4" paddingTop="$4">
           
@@ -134,6 +148,7 @@ export default function CreateAutomationScreen() {
                         borderColor={strategy === s.id ? s.color : Colors.border}
                         onPress={() => setStrategy(s.id)}
                         paddingVertical="$3"
+                        className={strategy === s.id ? 'strategy-button-active' : 'strategy-button-inactive'}
                         style={{ height: 'auto', alignItems: 'flex-start' }}
                       >
                         <YStack gap="$1" padding="$2">
@@ -232,6 +247,7 @@ export default function CreateAutomationScreen() {
                         borderColor={riskProfile === r.id ? Colors.neonGreen : Colors.border}
                         onPress={() => setRiskProfile(r.id)}
                         paddingVertical="$3"
+                        className={riskProfile === r.id ? 'strategy-button-active' : 'strategy-button-inactive'}
                         style={{ height: 'auto', alignItems: 'flex-start' }}
                       >
                         <YStack gap="$1" padding="$1">
@@ -299,10 +315,11 @@ export default function CreateAutomationScreen() {
                   ) : (
                     <Button 
                       size="$4" 
-                      backgroundColor={isValid ? Colors.neonGreenDim : Colors.bgSoft}
+                      backgroundColor={isValid ? 'transparent' : Colors.bgSoft}
                       disabled={!isValid}
                       opacity={isValid ? 1 : 0.5}
                       onPress={handleLaunch}
+                      className={isValid ? 'launch-button-premium' : ''}
                       pressStyle={{ scale: 0.98 }}
                     >
                       <Text color={isValid ? '#FFF' : Colors.textMuted} fontWeight="700" fontSize={16}>

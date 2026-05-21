@@ -154,12 +154,12 @@ const styles = StyleSheet.create({
     top: 0,
     zIndex: 100,
     width: '100%',
-    backgroundColor: 'rgba(10, 14, 23, 0.88)',
+    backgroundColor: 'rgba(5, 5, 5, 0.88)',
     backdropFilter: 'blur(20px)' as any,
     WebkitBackdropFilter: 'blur(20px)' as any,
     borderBottomWidth: 1,
     borderBottomColor: Colors.borderSubtle,
-    boxShadow: '0 2px 20px rgba(0,0,0,0.3)' as any,
+    boxShadow: '0 2px 20px rgba(0,0,0,0.5)' as any,
   },
   navBar: {
     flexDirection: 'row',
@@ -206,7 +206,7 @@ const styles = StyleSheet.create({
     transition: 'background-color 0.15s ease' as any,
   },
   navLinkActive: {
-    backgroundColor: 'rgba(99, 102, 241, 0.15)',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
   },
   navLabel: {
     fontSize: 14,
@@ -224,7 +224,7 @@ const styles = StyleSheet.create({
     right: 22,
     height: 2,
     borderRadius: 1,
-    backgroundColor: Colors.neonGreen,
+    backgroundColor: '#FAFAFA',
   },
   badge: {
     backgroundColor: Colors.coralRed,
@@ -247,15 +247,15 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingHorizontal: 16,
     paddingVertical: 8,
-    borderRadius: 10,
-    backgroundColor: Colors.indigo,
+    borderRadius: 100,
+    backgroundColor: Colors.border,
     cursor: 'pointer' as any,
     transition: 'all 0.15s ease' as any,
   },
   walletButtonConnected: {
-    backgroundColor: 'rgba(0, 255, 136, 0.12)',
+    backgroundColor: 'transparent',
     borderWidth: 1,
-    borderColor: 'rgba(0, 255, 136, 0.25)',
+    borderColor: 'rgba(255, 255, 255, 0.15)',
   },
   walletButtonText: {
     fontSize: 13,
@@ -297,8 +297,8 @@ export default function TabLayout() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: 'rgba(10, 14, 23, 0.95)',
-          borderTopColor: Colors.borderSubtle,
+          backgroundColor: 'rgba(9, 9, 11, 0.95)',
+          borderTopColor: 'rgba(255, 255, 255, 0.05)',
           borderTopWidth: 1,
           height: Platform.OS === 'ios' ? 88 : 64,
           paddingBottom: Platform.OS === 'ios' ? 28 : 8,

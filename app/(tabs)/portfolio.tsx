@@ -9,6 +9,8 @@ import { ConnectButton } from '@/src/components/wallet/ConnectButton';
 import { TokenBalance } from '@/src/components/wallet/TokenBalance';
 import { Colors } from '@/src/lib/constants';
 import { useWalletStore } from '@/src/store/useWalletStore';
+import { useAutomationStore } from '@/src/store/useAutomationStore';
+import { TriggerCard } from '@/src/components/automations/TriggerCard';
 import React from 'react';
 import { Platform } from 'react-native';
 
@@ -24,7 +26,9 @@ const DONUT_COLORS = [Colors.neonGreen, Colors.indigo, Colors.violet, '#F59E0B']
 
 
 export default function PortfolioScreen() {
-  const { connected } = useWalletStore();
+  const { connected, publicKey } = useWalletStore();
+  const { automations } = useAutomationStore();
+  const activeAutomations = (automations || []).filter(a => a.walletAddress === publicKey && a.enabled);
   const totalValue = MOCK_TOKENS.reduce((sum, t) => sum + t.usdValue, 0);
 
   const segments: DonutSegment[] = MOCK_TOKENS.map((t, i) => ({
@@ -36,9 +40,9 @@ export default function PortfolioScreen() {
     <PageShell>
       <YStack gap="$4" paddingVertical="$4">
         {Platform.OS !== 'web' && (
-          <YStack paddingHorizontal="$4" gap="$1">
-            <Text fontSize={28} fontWeight="800" color={Colors.textPrimary}>Portfolio</Text>
-            <Text fontSize={14} color={Colors.textSecondary}>Your on-chain assets</Text>
+          <YStack paddingHorizontal="$4" gap="$1" paddingBottom="$4">
+            <Text fontSize={32} fontWeight="900" color={Colors.textPrimary} letterSpacing={-1}>Portfolio</Text>
+            <Text fontSize={16} color={Colors.textSecondary}>Your on-chain assets</Text>
           </YStack>
         )}
 
@@ -50,10 +54,10 @@ export default function PortfolioScreen() {
           <>
             {/* Net Worth */}
             <YStack paddingHorizontal="$4">
-              <GlassCard elevated glow="green">
-                <YStack alignItems="center" gap="$1" paddingVertical="$2">
-                  <Text fontSize={12} color={Colors.textMuted} textTransform="uppercase" letterSpacing={1}>Total Net Worth</Text>
-                  <AnimatedCounter value={totalValue} prefix="$" decimals={2} fontSize={36} color={Colors.textPrimary} />
+              <GlassCard elevated padding="$6" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' } as any}>
+                <Text fontSize={13} color={Colors.textSecondary} textTransform="uppercase" letterSpacing={2} fontWeight="600">Total Net Worth</Text>
+                <YStack paddingVertical="$1">
+                  <AnimatedCounter value={totalValue} prefix="$" decimals={2} fontSize={48} fontWeight="900" color={Colors.textPrimary} />
                 </YStack>
               </GlassCard>
             </YStack>
@@ -64,6 +68,18 @@ export default function PortfolioScreen() {
                 <DonutChart segments={segments} totalValue={totalValue} />
               </ChartCard>
             </YStack>
+
+            {/* Active Automations */}
+            {activeAutomations.length > 0 && (
+              <YStack paddingHorizontal="$4" marginTop="$4">
+                <Text fontSize={20} fontWeight="800" color={Colors.textPrimary} marginBottom="$3" letterSpacing={-0.5}>Active Bots</Text>
+                <YStack gap="$3">
+                  {activeAutomations.map(auto => (
+                    <TriggerCard key={auto.id} automation={auto} />
+                  ))}
+                </YStack>
+              </YStack>
+            )}
 
             {/* Token List */}
             <YStack paddingHorizontal="$4">

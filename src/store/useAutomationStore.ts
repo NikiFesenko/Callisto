@@ -24,6 +24,7 @@ export interface AutomationAction {
 
 export interface Automation {
   id: string;
+  walletAddress?: string;
   name: string;
   condition: AutomationCondition;
   action: AutomationAction;

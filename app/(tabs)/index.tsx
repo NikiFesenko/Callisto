@@ -81,17 +81,15 @@ export default function DashboardScreen() {
   return (
     <PageShell>
       <YStack gap="$4" paddingVertical="$4">
-        {/* Header — hidden on web (brand is in the top nav) */}
-        {Platform.OS !== 'web' && (
-          <YStack paddingHorizontal="$4" gap="$1">
-            <Text fontSize={28} fontWeight="800" color={Colors.textPrimary}>
-              Colisto
-            </Text>
-            <Text fontSize={14} color={Colors.textSecondary}>
-              Macro-Driven Automated Trading
-            </Text>
-          </YStack>
-        )}
+        {/* Massive Web3 Hero Section */}
+        <YStack alignItems="center" paddingTop="$6" paddingBottom="$4" gap="$2" paddingHorizontal="$4">
+          <Text fontSize={Platform.OS === 'web' ? 48 : 36} fontWeight="900" color={Colors.textPrimary} textAlign="center" letterSpacing={-1}>
+            Intelligent Web3 Automation
+          </Text>
+          <Text fontSize={18} color={Colors.textSecondary} textAlign="center" style={{ maxWidth: 500 }} marginTop="$2">
+            Execute flawless macro-driven strategies on Solana with our institutional-grade engine.
+          </Text>
+        </YStack>
 
         <KPIRow />
 

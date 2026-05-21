@@ -32,9 +32,9 @@ export default function SettingsScreen() {
     <PageShell>
       <YStack gap="$4" paddingVertical="$4">
         {Platform.OS !== 'web' && (
-          <YStack paddingHorizontal="$4" gap="$1">
-            <Text fontSize={28} fontWeight="800" color={Colors.textPrimary}>Settings</Text>
-            <Text fontSize={14} color={Colors.textSecondary}>App configuration</Text>
+          <YStack paddingHorizontal="$4" gap="$1" paddingBottom="$4">
+            <Text fontSize={32} fontWeight="900" color={Colors.textPrimary} letterSpacing={-1}>Settings</Text>
+            <Text fontSize={16} color={Colors.textSecondary}>App configuration</Text>
           </YStack>
         )}
 

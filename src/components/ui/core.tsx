@@ -93,7 +93,7 @@ export const Text = React.forwardRef<HTMLSpanElement, any>((props, ref) => {
     color,
     fontSize: resolveToken(fontSize),
     fontWeight,
-    fontFamily: fontFamily === '$mono' ? 'monospace' : fontFamily,
+    fontFamily: fontFamily === '$mono' ? '"Space Mono", monospace' : '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
     textAlign,
     letterSpacing,
     lineHeight,
@@ -108,7 +108,24 @@ export const Text = React.forwardRef<HTMLSpanElement, any>((props, ref) => {
 });
 
 export const Button = React.forwardRef<HTMLButtonElement, any>((props, ref) => {
-  const { size, pressStyle, style, backgroundColor, borderRadius, paddingHorizontal, paddingVertical, borderWidth, borderColor, marginTop, children, onPress, ...rest } = props;
+  const { size, variant, className, pressStyle, style, backgroundColor, borderRadius, paddingHorizontal, paddingVertical, borderWidth, borderColor, marginTop, children, onPress, ...rest } = props;
+  
+  let baseBg = backgroundColor || 'transparent';
+  let baseBorder = borderColor;
+  let baseBorderWidth = borderWidth;
+  let extraClass = className ? ` ${className}` : '';
+
+  if (variant === 'primary') {
+    extraClass += ' launch-button-premium';
+  } else if (variant === 'secondary') {
+    baseBg = 'rgba(255, 255, 255, 0.05)';
+    baseBorder = 'rgba(255, 255, 255, 0.1)';
+    baseBorderWidth = baseBorderWidth || 1;
+  } else if (variant === 'ghost') {
+    baseBg = 'transparent';
+    baseBorder = 'transparent';
+  }
+
   const computedStyle: React.CSSProperties = {
     display: 'flex',
     justifyContent: 'center',
@@ -116,34 +133,40 @@ export const Button = React.forwardRef<HTMLButtonElement, any>((props, ref) => {
     cursor: 'pointer',
     border: 'none',
     transition: 'all 0.15s ease',
-    backgroundColor: backgroundColor || 'transparent',
-    borderRadius: borderRadius ? resolveToken(borderRadius) : undefined,
+    backgroundColor: baseBg,
+    borderRadius: borderRadius ? resolveToken(borderRadius) : 12,
     paddingLeft: paddingHorizontal ? resolveToken(paddingHorizontal) : undefined,
     paddingRight: paddingHorizontal ? resolveToken(paddingHorizontal) : undefined,
     paddingTop: paddingVertical ? resolveToken(paddingVertical) : undefined,
     paddingBottom: paddingVertical ? resolveToken(paddingVertical) : undefined,
-    borderWidth,
-    borderColor,
-    borderStyle: borderWidth ? 'solid' : undefined,
+    borderWidth: baseBorderWidth,
+    borderColor: baseBorder,
+    borderStyle: baseBorderWidth ? 'solid' : undefined,
     marginTop: marginTop ? resolveToken(marginTop) : undefined,
     ...style,
   };
   
   if (size === '$2') {
     computedStyle.padding = '0 12px';
-    computedStyle.height = 28;
+    computedStyle.height = 32;
+    computedStyle.fontSize = 13;
   } else if (size === '$3') {
     computedStyle.padding = '0 16px';
-    computedStyle.height = 36;
+    computedStyle.height = 40;
+    computedStyle.fontSize = 14;
+  } else if (size === '$4') {
+    computedStyle.padding = '0 24px';
+    computedStyle.height = 48;
+    computedStyle.fontSize = 16;
   }
 
   return (
-    <button ref={ref} style={computedStyle} onClick={onPress} {...rest}>{children}</button>
+    <button ref={ref} className={extraClass.trim() || undefined} style={computedStyle} onClick={onPress} {...rest}>{children}</button>
   );
 });
 
 export const Input = React.forwardRef<HTMLInputElement, any>((props, ref) => {
-  const { style, backgroundColor, color, borderRadius, borderWidth, borderColor, padding, ...rest } = props;
+  const { style, backgroundColor, color, borderRadius, borderWidth, borderColor, padding, onChangeText, onChange, className, ...rest } = props;
   const computedStyle: React.CSSProperties = {
     backgroundColor,
     color,
@@ -151,11 +174,23 @@ export const Input = React.forwardRef<HTMLInputElement, any>((props, ref) => {
     borderWidth: borderWidth || 1,
     borderColor: borderColor || 'rgba(255,255,255,0.1)',
     borderStyle: 'solid',
-    padding: padding ? resolveToken(padding) : '8px 12px',
+    padding: padding ? resolveToken(padding) : '12px 16px',
     outline: 'none',
+    transition: 'all 0.2s ease',
+    fontFamily: 'inherit',
     ...style,
   };
-  return <input ref={ref} style={computedStyle} {...rest} />;
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (onChangeText) {
+      onChangeText(e.target.value);
+    }
+    if (onChange) {
+      onChange(e);
+    }
+  };
+
+  return <input ref={ref} className={className ? `premium-input ${className}` : 'premium-input'} style={computedStyle} onChange={handleChange} {...rest} />;
 });
 
 export const Card = (props: any) => <div {...props} />;

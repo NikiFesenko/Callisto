@@ -12,7 +12,7 @@ export default function PricingScreen() {
       <ScrollView contentContainerStyle={{ padding: 24, paddingBottom: 100 } as any}>
         {/* Header */}
         <YStack alignItems="center" gap="$3" marginBottom="$8">
-          <Text fontSize={36} fontWeight="800" color={Colors.textPrimary} style={{ textAlign: 'center' } as any}>
+          <Text fontSize={48} fontWeight="900" color={Colors.textPrimary} style={{ textAlign: 'center', letterSpacing: -2 } as any}>
             Simple, Transparent Pricing
           </Text>
           <Text fontSize={16} color={Colors.textSecondary} style={{ textAlign: 'center', maxWidth: 600 } as any}>
@@ -41,7 +41,7 @@ export default function PricingScreen() {
                 ))}
               </YStack>
 
-              <Button marginTop="$6" backgroundColor="transparent" borderWidth={1} borderColor={Colors.indigo}>
+              <Button marginTop="$6" variant="secondary" size="$4">
                 <Text color={Colors.textPrimary} fontWeight="600">Current Plan</Text>
               </Button>
             </YStack>
@@ -71,8 +71,8 @@ export default function PricingScreen() {
                 ))}
               </YStack>
 
-              <Button marginTop="$6" backgroundColor={Colors.indigo}>
-                <Text color="#FFF" fontWeight="600">Upgrade to Pro</Text>
+              <Button marginTop="$6" variant="primary" size="$4">
+                <Text color="#FFF" fontWeight="700">Upgrade to Pro</Text>
               </Button>
             </YStack>
           </GlassCard>
@@ -96,7 +96,7 @@ export default function PricingScreen() {
                 ))}
               </YStack>
 
-              <Button marginTop="$6" backgroundColor={Colors.bgElevated} borderWidth={1} borderColor={Colors.borderSubtle}>
+              <Button marginTop="$6" variant="secondary" size="$4">
                 <Text color={Colors.textPrimary} fontWeight="600">Contact Sales</Text>
               </Button>
             </YStack>
