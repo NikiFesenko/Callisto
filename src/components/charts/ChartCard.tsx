@@ -1,8 +1,5 @@
 // @ts-nocheck
 import React from 'react';
-import { YStack, XStack, Text } from '@/src/components/ui/core';
-import { GlassCard } from '@/src/components/ui/GlassCard';
-import { Colors } from '@/src/lib/constants';
 
 interface ChartCardProps {
   title: string;
@@ -11,38 +8,21 @@ interface ChartCardProps {
   rightAction?: React.ReactNode;
 }
 
-export function ChartCard({
-  title,
-  subtitle,
-  children,
-  rightAction,
-}: ChartCardProps) {
+export function ChartCard({ title, subtitle, children, rightAction }: ChartCardProps) {
   return (
-    <GlassCard elevated>
-      <YStack gap="$3">
-        <XStack justifyContent="space-between" alignItems="flex-start">
-          <YStack gap="$1" flex={1}>
-            <Text
-              fontSize={16}
-              fontWeight="600"
-              color={Colors.textPrimary}
-            >
-              {title}
-            </Text>
-            {subtitle && (
-              <Text
-                fontSize={12}
-                color={Colors.textMuted}
-              >
-                {subtitle}
-              </Text>
-            )}
-          </YStack>
-          {rightAction}
-        </XStack>
-
-        {children}
-      </YStack>
-    </GlassCard>
+    <div className="colisto-card-elevated" style={{ padding: 24 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
+        <div>
+          <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 4 }}>
+            {title}
+          </div>
+          {subtitle && (
+            <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{subtitle}</div>
+          )}
+        </div>
+        {rightAction}
+      </div>
+      {children}
+    </div>
   );
 }

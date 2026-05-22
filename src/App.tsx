@@ -1,4 +1,5 @@
-import React from 'react';
+// @ts-nocheck
+import React, { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Outlet, Link, useLocation } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { SolanaWalletProvider } from '@/src/components/wallet/SolanaWalletProvider';
@@ -9,12 +10,13 @@ import AutomationsScreen from '../app/(tabs)/automations';
 import CreateAutomationScreen from '../app/create-automation';
 import PricingScreen from '../app/(tabs)/pricing';
 import SettingsScreen from '../app/(tabs)/settings';
+import MarketsScreen from '../app/(tabs)/markets';
 
 import { useAutomationStore } from '@/src/store/useAutomationStore';
 import { useWalletStore } from '@/src/store/useWalletStore';
 import { useOpenWalletModal } from '@/src/components/wallet/useOpenWalletModal';
 import { truncateAddress } from '@/src/lib/formatters';
-import { Colors } from '@/src/lib/constants';
+import { useThemeStore } from '@/src/store/useThemeStore';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -23,97 +25,221 @@ const queryClient = new QueryClient({
 });
 
 const TAB_DEFS = [
-  { name: 'index', title: 'Dashboard', icon: 'grid_view', href: '/' },
-  { name: 'portfolio', title: 'Portfolio', icon: 'account_balance_wallet', href: '/portfolio' },
-  { name: 'automations', title: 'Automations', icon: 'auto_graph', href: '/automations' },
-  { name: 'pricing', title: 'Pricing', icon: 'storefront', href: '/pricing' },
-  { name: 'settings', title: 'Settings', icon: 'settings', href: '/settings' },
+  { name: 'index',       title: 'Overview',     icon: 'grid_view',              href: '/' },
+  { name: 'markets',     title: 'Markets',       icon: 'public',                 href: '/markets' },
+  { name: 'portfolio',   title: 'Portfolio',     icon: 'account_balance_wallet', href: '/portfolio' },
+  { name: 'automations', title: 'Automations',   icon: 'auto_graph',             href: '/automations' },
+  { name: 'pricing',     title: 'Pricing',       icon: 'storefront',             href: '/pricing' },
+  { name: 'settings',    title: 'Settings',      icon: 'settings',               href: '/settings' },
 ];
 
-function MaterialIcon({ name, size = 20, color = Colors.textMuted }: { name: string; size?: number; color?: string; }) {
-  const style = { fontSize: size, color, lineHeight: `${size}px`, verticalAlign: 'middle', display: 'inline-block', userSelect: 'none' as any };
-  return <span className="material-symbols-outlined" style={style}>{name}</span>;
+function MaterialIcon({ name, size = 18, color = 'currentColor' }: { name: string; size?: number; color?: string }) {
+  return (
+    <span
+      className="material-symbols-outlined"
+      style={{ fontSize: size, color, lineHeight: `${size}px`, verticalAlign: 'middle', display: 'inline-block', userSelect: 'none', flexShrink: 0 }}
+    >
+      {name}
+    </span>
+  );
 }
 
 function WebNavBar() {
   const location = useLocation();
   const pathname = location.pathname;
-  const automations = useAutomationStore((s) => s.automations);
   const { connected, publicKey, disconnect } = useWalletStore();
   const openWalletModal = useOpenWalletModal();
+  const { theme, setTheme } = useThemeStore();
+  const isDark = theme === 'dark';
+  const [mobileOpen, setMobileOpen] = useState(false);
 
-  const isActive = (href: string) => href === '/' ? pathname === '/' : pathname.startsWith(href);
+  const isActive = (href: string) =>
+    href === '/' ? pathname === '/' : pathname.startsWith(href);
+
+  const toggleTheme = () => setTheme(isDark ? 'light' : 'dark');
 
   return (
-    <div className="flex items-center justify-between w-full border-b border-[#1E293B] bg-[#0A0E17] px-6 h-[72px]">
-      
-      {/* Logo Area */}
-      <Link to="/" className="flex items-center gap-2 no-underline group flex-shrink-0 w-40">
-        <span className="text-[#00FF88] text-xl transition-transform group-hover:scale-110">◈</span>
-        <span className="text-white text-[11px] font-bold tracking-[0.3em] uppercase">Colisto</span>
+    <nav
+      className="colisto-navbar"
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '0 24px',
+        height: 64,
+        position: 'sticky',
+        top: 0,
+        zIndex: 100,
+      }}
+    >
+      {/* Logo */}
+      <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none', flexShrink: 0 }}>
+        <div style={{
+          width: 30, height: 30, borderRadius: 8,
+          background: 'linear-gradient(135deg, #7C3AED 0%, #00FFA3 100%)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: 14, fontWeight: 900, color: '#fff',
+          boxShadow: '0 0 16px rgba(124,58,237,0.4)',
+        }}>◈</div>
+        <span style={{ fontSize: 13, fontWeight: 800, letterSpacing: '0.2em', color: 'var(--text-primary)', textTransform: 'uppercase' }}>
+          Colisto
+        </span>
       </Link>
 
-      {/* Navigation Tabs */}
-      <div className="flex items-center gap-12 md:gap-16 mx-auto h-full">
+      {/* Nav links — desktop */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 4, height: '100%', flex: 1, justifyContent: 'center' }}>
         {TAB_DEFS.map((tab) => {
           const active = isActive(tab.href);
           return (
-            <Link 
-              key={tab.name} 
-              to={tab.href} 
-              className={`relative flex items-center gap-2.5 h-full transition-all duration-300 no-underline ${
-                active ? 'text-white' : 'text-[#94A3B8] hover:text-slate-200'
-              }`}
+            <Link
+              key={tab.name}
+              to={tab.href}
+              style={{
+                position: 'relative',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                height: '100%',
+                padding: '0 14px',
+                textDecoration: 'none',
+                fontSize: 13,
+                fontWeight: active ? 600 : 500,
+                color: active ? 'var(--text-primary)' : 'var(--text-secondary)',
+                borderBottom: active ? '2px solid var(--accent-green)' : '2px solid transparent',
+                transition: 'color 0.15s ease, border-color 0.15s ease',
+              }}
+              onMouseEnter={e => { if (!active) (e.currentTarget as HTMLElement).style.color = 'var(--text-primary)'; }}
+              onMouseLeave={e => { if (!active) (e.currentTarget as HTMLElement).style.color = 'var(--text-secondary)'; }}
             >
-              <MaterialIcon name={tab.icon} size={18} color={active ? '#00FF88' : 'currentColor'} />
-              <span className={`text-[13px] tracking-wide ${active ? 'font-semibold' : 'font-medium'}`}>
-                {tab.title === 'Dashboard' ? 'Overview' : tab.title}
-              </span>
-              
-              {/* Active Underline */}
-              {active && (
-                <div className="absolute bottom-0 left-0 right-0 h-[2.5px] bg-[#00FF88] rounded-t-full shadow-[0_-2px_10px_rgba(0,255,136,0.3)]" />
-              )}
+              <MaterialIcon name={tab.icon} size={15} color={active ? 'var(--accent-green)' : 'currentColor'} />
+              {tab.title}
             </Link>
           );
         })}
       </div>
 
-      {/* Right Side Actions */}
-      <div className="flex items-center justify-end gap-6 flex-shrink-0 w-40">
-        <button className="text-[#94A3B8] hover:text-white transition-colors cursor-pointer bg-transparent border-none flex items-center">
-          <MaterialIcon name="light_mode" size={20} />
+      {/* Right actions */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+        {/* Theme toggle */}
+        <button
+          onClick={toggleTheme}
+          title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+          style={{
+            width: 34, height: 34,
+            borderRadius: 8,
+            background: 'var(--bg-badge)',
+            border: '1px solid var(--border-default)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            cursor: 'pointer',
+            color: 'var(--text-secondary)',
+            transition: 'background 0.15s, border-color 0.15s, color 0.15s',
+          }}
+          onMouseEnter={e => {
+            (e.currentTarget as HTMLElement).style.background = 'var(--bg-card-hover)';
+            (e.currentTarget as HTMLElement).style.borderColor = 'var(--border-strong)';
+            (e.currentTarget as HTMLElement).style.color = 'var(--text-primary)';
+          }}
+          onMouseLeave={e => {
+            (e.currentTarget as HTMLElement).style.background = 'var(--bg-badge)';
+            (e.currentTarget as HTMLElement).style.borderColor = 'var(--border-default)';
+            (e.currentTarget as HTMLElement).style.color = 'var(--text-secondary)';
+          }}
+        >
+          <MaterialIcon name={isDark ? 'light_mode' : 'dark_mode'} size={16} color="currentColor" />
         </button>
-        
-        <div className="flex items-center gap-4">
-          <button 
-            onClick={openWalletModal} 
-            className="px-4 py-1.5 rounded-full bg-[#1E293B] border border-[#334155] text-[#E2E8F0] hover:bg-[#334155] transition-colors cursor-pointer text-[13px] font-medium tracking-wide"
-          >
-            {connected && publicKey ? truncateAddress(publicKey, 4) : 'Connect'}
-          </button>
-          
-          {connected && (
-            <button 
-              onClick={disconnect}
-              className="text-[#94A3B8] hover:text-white text-[13px] font-medium transition-colors cursor-pointer bg-transparent border-none"
-            >
-              Sign Out
-            </button>
+
+        {/* Wallet button */}
+        <button
+          onClick={openWalletModal}
+          style={{
+            height: 34,
+            padding: '0 14px',
+            borderRadius: 8,
+            background: connected ? 'var(--bg-badge)' : 'var(--gradient-purple)',
+            border: connected ? '1px solid var(--border-default)' : 'none',
+            color: '#fff',
+            fontSize: 13,
+            fontWeight: 600,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+            transition: 'opacity 0.15s ease',
+            backgroundImage: connected ? undefined : 'linear-gradient(135deg, #7C3AED 0%, #A78BFA 100%)',
+            boxShadow: connected ? undefined : '0 0 20px rgba(124,58,237,0.35)',
+          }}
+          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = '0.85'; }}
+          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '1'; }}
+        >
+          {connected ? (
+            <>
+              <div style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--accent-green)', boxShadow: '0 0 6px var(--accent-green)' }} />
+              <span style={{ color: 'var(--text-primary)', fontFamily: 'Space Mono, monospace', fontSize: 12 }}>
+                {truncateAddress(publicKey!, 4)}
+              </span>
+            </>
+          ) : (
+            <>
+              <MaterialIcon name="account_balance_wallet" size={14} color="#fff" />
+              Connect
+            </>
           )}
-        </div>
+        </button>
+
+        {connected && (
+          <button
+            onClick={disconnect}
+            style={{
+              height: 34,
+              padding: '0 12px',
+              borderRadius: 8,
+              background: 'transparent',
+              border: '1px solid var(--border-default)',
+              color: 'var(--text-muted)',
+              fontSize: 12,
+              fontWeight: 500,
+              cursor: 'pointer',
+              transition: 'all 0.15s ease',
+            }}
+            onMouseEnter={e => {
+              (e.currentTarget as HTMLElement).style.borderColor = 'var(--accent-red)';
+              (e.currentTarget as HTMLElement).style.color = 'var(--accent-red)';
+            }}
+            onMouseLeave={e => {
+              (e.currentTarget as HTMLElement).style.borderColor = 'var(--border-default)';
+              (e.currentTarget as HTMLElement).style.color = 'var(--text-muted)';
+            }}
+          >
+            Sign Out
+          </button>
+        )}
       </div>
-      
-    </div>
+    </nav>
   );
 }
 
 function Layout() {
+  const { theme } = useThemeStore();
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+  }, [theme]);
+
   return (
-    <div className="flex flex-col min-h-screen w-full bg-[#05070B] p-2 sm:p-4 md:p-6">
-      <div className="flex-1 flex flex-col w-full bg-[#0A0E17] border border-[#1E293B] rounded-[24px] overflow-hidden shadow-2xl">
+    <div className="colisto-layout-bg" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      <div
+        className="colisto-layout-surface"
+        style={{
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          margin: '8px',
+          borderRadius: 20,
+          overflow: 'hidden',
+        }}
+      >
         <WebNavBar />
-        <div className="flex-1 flex flex-col p-4 md:p-6 lg:p-8 overflow-y-auto">
+        <div style={{ flex: 1, overflowY: 'auto', padding: '0' }}>
           <Outlet />
         </div>
       </div>
@@ -129,6 +255,7 @@ export default function App() {
           <Routes>
             <Route path="/" element={<Layout />}>
               <Route index element={<DashboardScreen />} />
+              <Route path="markets" element={<MarketsScreen />} />
               <Route path="portfolio" element={<PortfolioScreen />} />
               <Route path="automations" element={<AutomationsScreen />} />
               <Route path="create-automation" element={<CreateAutomationScreen />} />

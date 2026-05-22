@@ -74,66 +74,46 @@ export function LineChart({
       height,
       layout: {
         background: { color: 'transparent' },
-        textColor: Colors.textSecondary,
-        fontFamily: "'Inter', 'Rubik', system-ui, sans-serif",
+        textColor: 'var(--text-secondary)' in document.documentElement.style
+          ? getComputedStyle(document.documentElement).getPropertyValue('--text-secondary').trim()
+          : '#7D8BA6',
+        fontFamily: "'Inter', system-ui, sans-serif",
         fontSize: 11,
       },
       grid: {
-        vertLines: { color: Colors.borderSubtle, style: LineStyle.Dotted },
-        horzLines: { color: Colors.borderSubtle, style: LineStyle.Dotted },
+        vertLines: { color: 'rgba(255,255,255,0.04)', style: LineStyle.Dotted },
+        horzLines: { color: 'rgba(255,255,255,0.04)', style: LineStyle.Dotted },
       },
       crosshair: {
         mode: CrosshairMode.Normal,
-        vertLine: {
-          color: 'rgba(99,102,241,0.5)',
-          width: 1,
-          style: LineStyle.Dashed,
-          labelBackgroundColor: Colors.indigo,
-        },
-        horzLine: {
-          color: 'rgba(99,102,241,0.5)',
-          width: 1,
-          style: LineStyle.Dashed,
-          labelBackgroundColor: Colors.indigo,
-        },
+        vertLine: { color: 'rgba(124,58,237,0.5)', width: 1, style: LineStyle.Dashed, labelBackgroundColor: '#7C3AED' },
+        horzLine: { color: 'rgba(124,58,237,0.5)', width: 1, style: LineStyle.Dashed, labelBackgroundColor: '#7C3AED' },
       },
       rightPriceScale: {
-        borderColor: Colors.borderSubtle,
-        textColor: Colors.textMuted,
+        borderColor: 'rgba(255,255,255,0.07)',
+        textColor: '#4B5568',
         scaleMargins: { top: 0.1, bottom: 0.1 },
       },
       timeScale: {
-        borderColor: Colors.borderSubtle,
-        timeVisible: true,
-        secondsVisible: false,
-        rightOffset: 5,
-        fixLeftEdge: false,
-        fixRightEdge: false,
+        borderColor: 'rgba(255,255,255,0.07)',
+        timeVisible: true, secondsVisible: false,
+        rightOffset: 5, fixLeftEdge: false, fixRightEdge: false,
       },
-      handleScale: {
-        axisPressedMouseMove: true,
-        mouseWheel: true,
-        pinch: true,
-      },
-      handleScroll: {
-        mouseWheel: true,
-        pressedMouseMove: true,
-        horzTouchDrag: true,
-        vertTouchDrag: false,
-      },
+      handleScale: { axisPressedMouseMove: true, mouseWheel: true, pinch: true },
+      handleScroll: { mouseWheel: true, pressedMouseMove: true, horzTouchDrag: true, vertTouchDrag: false },
     });
 
     chartRef.current = chart;
 
     const primarySeries = chart.addAreaSeries({
       lineColor: color,
-      topColor: `${color}40`,
+      topColor: `${color}30`,
       bottomColor: `${color}00`,
       lineWidth: 2,
       crosshairMarkerVisible: true,
       crosshairMarkerRadius: 5,
       crosshairMarkerBorderColor: color,
-      crosshairMarkerBackgroundColor: Colors.bgBase,
+      crosshairMarkerBackgroundColor: '#0C111D',
       priceLineVisible: false,
       lastValueVisible: true,
     });
@@ -264,13 +244,8 @@ export function LineChart({
 
   if (isLoading) {
     return (
-      <div style={{ height, borderRadius: 12, background: Colors.bgElevated, position: 'relative', overflow: 'hidden' }}>
-        <div style={{
-          position: 'absolute', inset: 0,
-          background: `linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.04) 50%, transparent 100%)`,
-          animation: 'shimmer 1.5s infinite',
-        }} />
-        <style>{`@keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }`}</style>
+      <div style={{ height, borderRadius: 12, background: 'var(--bg-card)', position: 'relative', overflow: 'hidden' }}>
+        <div className="shimmer-overlay" style={{ position: 'absolute', inset: 0 }} />
       </div>
     );
   }
@@ -278,17 +253,12 @@ export function LineChart({
   return (
     <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 8 }}>
       {showTimeRanges && (
-        <div style={{ display: 'flex', gap: 4, justifyContent: 'flex-end', paddingRight: 4 }}>
+      <div style={{ display: 'flex', gap: 4, justifyContent: 'flex-end', paddingRight: 4 }}>
           {TIME_RANGES.map(range => (
             <button
               key={range}
-              style={{
-                ...btnBase,
-                backgroundColor: activeRange === range ? Colors.indigo : 'transparent',
-                color: activeRange === range ? '#FFF' : Colors.textMuted,
-              }}
-              onMouseEnter={e => { if (activeRange !== range) (e.target as HTMLElement).style.backgroundColor = Colors.bgHover; }}
-              onMouseLeave={e => { if (activeRange !== range) (e.target as HTMLElement).style.backgroundColor = 'transparent'; }}
+              className={activeRange === range ? 'filter-tab-active' : 'filter-tab-inactive'}
+              style={{ padding: '3px 10px', borderRadius: 6, fontSize: 11, fontWeight: 600, cursor: 'pointer' }}
               onClick={() => handleTimeRange(range)}
             >
               {range}
@@ -305,20 +275,21 @@ export function LineChart({
             position: 'absolute',
             left: tooltip.x + 12,
             top: tooltip.y - 10,
-            background: 'rgba(10,14,23,0.92)',
-            border: `1px solid ${Colors.border}`,
-            borderRadius: 8,
-            padding: '6px 10px',
+            background: 'var(--bg-card)',
+            border: '1px solid var(--border-strong)',
+            borderRadius: 10,
+            padding: '8px 12px',
             pointerEvents: 'none',
-            backdropFilter: 'blur(12px)',
-            boxShadow: '0 4px 20px rgba(0,0,0,0.4)',
+            backdropFilter: 'blur(16px)',
+            WebkitBackdropFilter: 'blur(16px)',
+            boxShadow: 'var(--shadow-elevated)',
             zIndex: 10,
             minWidth: 140,
           }}>
-            <div style={{ fontSize: 10, color: Colors.textMuted, marginBottom: 2 }}>{tooltip.date}</div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: color }}>{tooltip.price}</div>
+            <div style={{ fontSize: 10, color: 'var(--text-muted)', marginBottom: 4 }}>{tooltip.date}</div>
+            <div style={{ fontSize: 13, fontWeight: 700, color, fontFamily: 'Space Mono, monospace' }}>{tooltip.price}</div>
             {tooltip.secondary && secondaryLabel && (
-              <div style={{ fontSize: 11, color: secondaryColor, marginTop: 2 }}>
+              <div style={{ fontSize: 11, color: secondaryColor, marginTop: 4 }}>
                 {secondaryLabel}: {tooltip.secondary}
               </div>
             )}

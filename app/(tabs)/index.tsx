@@ -8,57 +8,52 @@ import { MacroOverlay } from '@/src/components/dashboard/MacroOverlay';
 import { NewsRow } from '@/src/components/dashboard/NewsRow';
 import { Text, YStack } from '@/src/components/ui/core';
 import { PageShell } from '@/src/components/ui/PageShell';
-import { Colors, FRED_SERIES } from '@/src/lib/constants';
+import { FRED_SERIES } from '@/src/lib/constants';
 import React, { useMemo, useState } from 'react';
-import { Platform } from 'react-native';
+import { Link } from 'react-router-dom';
+
+function StatPill({ label, value, color }: { label: string; value: string; color?: string }) {
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center', gap: 8,
+      padding: '6px 14px',
+      borderRadius: 100,
+      background: 'var(--bg-badge)',
+      border: '1px solid var(--border-default)',
+      fontSize: 12,
+    }}>
+      <span style={{ color: 'var(--text-muted)' }}>{label}</span>
+      <span style={{ fontWeight: 700, color: color || 'var(--text-primary)', fontFamily: 'Space Mono, monospace' }}>{value}</span>
+    </div>
+  );
+}
 
 export default function DashboardScreen() {
   const [btcRange, setBtcRange] = useState('1Y');
   const [fedRange, setFedRange] = useState('1Y');
   const [cpiRange, setCpiRange] = useState('1Y');
 
-  const { data: m2Data, isLoading: m2Loading } = useFREDSeries(FRED_SERIES.M2, {
-    observationStart: rangeToObservationStart(btcRange),
-  });
-  const { data: cpiData, isLoading: cpiLoading } = useFREDSeries(FRED_SERIES.CPI, {
-    observationStart: rangeToObservationStart(cpiRange),
-  });
-  const { data: fedData, isLoading: fedLoading } = useFREDSeries(FRED_SERIES.FED_FUNDS, {
-    observationStart: rangeToObservationStart(fedRange),
-  });
+  const { data: m2Data,  isLoading: m2Loading  } = useFREDSeries(FRED_SERIES.M2,        { observationStart: rangeToObservationStart(btcRange) });
+  const { data: cpiData, isLoading: cpiLoading } = useFREDSeries(FRED_SERIES.CPI,       { observationStart: rangeToObservationStart(cpiRange) });
+  const { data: fedData, isLoading: fedLoading } = useFREDSeries(FRED_SERIES.FED_FUNDS, { observationStart: rangeToObservationStart(fedRange) });
   const { data: btcPrices, isLoading: btcLoading } = usePriceHistory('bitcoin', btcRange);
 
-  // Memoize expensive data transforms
   const m2ChartData = useMemo<ChartDataPoint[]>(() =>
-    (m2Data?.observations || [])
-      .filter((o) => o.value !== '.')
-      .map((o) => ({ date: o.date, value: parseFloat(o.value) })),
-    [m2Data]
-  );
+    (m2Data?.observations || []).filter(o => o.value !== '.').map(o => ({ date: o.date, value: parseFloat(o.value) })),
+    [m2Data]);
 
   const cpiChartData = useMemo<ChartDataPoint[]>(() =>
-    (cpiData?.observations || [])
-      .filter((o) => o.value !== '.')
-      .map((o) => ({ date: o.date, value: parseFloat(o.value) })),
-    [cpiData]
-  );
+    (cpiData?.observations || []).filter(o => o.value !== '.').map(o => ({ date: o.date, value: parseFloat(o.value) })),
+    [cpiData]);
 
   const fedChartData = useMemo<ChartDataPoint[]>(() =>
-    (fedData?.observations || [])
-      .filter((o) => o.value !== '.')
-      .map((o) => ({ date: o.date, value: parseFloat(o.value) })),
-    [fedData]
-  );
+    (fedData?.observations || []).filter(o => o.value !== '.').map(o => ({ date: o.date, value: parseFloat(o.value) })),
+    [fedData]);
 
   const btcChartData = useMemo<ChartDataPoint[]>(() =>
-    (btcPrices || []).map((p) => ({
-      date: new Date(p.timestamp).toISOString().split('T')[0],
-      value: p.price,
-    })),
-    [btcPrices]
-  );
+    (btcPrices || []).map(p => ({ date: new Date(p.timestamp).toISOString().split('T')[0], value: p.price })),
+    [btcPrices]);
 
-  // Normalize M2 to BTC range for overlay
   const m2Normalized = useMemo<ChartDataPoint[]>(() => {
     if (m2ChartData.length === 0 || btcChartData.length === 0) return [];
     let m2Min = m2ChartData[0].value, m2Max = m2ChartData[0].value;
@@ -72,91 +67,100 @@ export default function DashboardScreen() {
       if (btcChartData[i].value > btcMax) btcMax = btcChartData[i].value;
     }
     const m2Range = m2Max - m2Min || 1;
-    return m2ChartData.map(d => ({
-      ...d,
-      value: btcMin + ((d.value - m2Min) / m2Range) * (btcMax - btcMin),
-    }));
+    return m2ChartData.map(d => ({ ...d, value: btcMin + ((d.value - m2Min) / m2Range) * (btcMax - btcMin) }));
   }, [m2ChartData, btcChartData]);
 
   return (
     <PageShell>
-      <YStack gap="$4" paddingVertical="$4">
-        {/* Massive Web3 Hero Section */}
-        <YStack alignItems="center" paddingTop="$6" paddingBottom="$4" gap="$2" paddingHorizontal="$4">
-          <Text fontSize={Platform.OS === 'web' ? 48 : 36} fontWeight="900" color={Colors.textPrimary} textAlign="center" letterSpacing={-1}>
-            Intelligent Web3 Automation
-          </Text>
-          <Text fontSize={18} color={Colors.textSecondary} textAlign="center" style={{ maxWidth: 500 }} marginTop="$2">
+      {/* ── Hero ─────────────────────────────────────────────────────── */}
+      <div style={{
+        padding: '64px 32px 48px',
+        textAlign: 'center',
+        background: 'radial-gradient(ellipse 80% 60% at 50% -10%, rgba(124,58,237,0.12) 0%, transparent 70%)',
+        borderBottom: '1px solid var(--border-subtle)',
+        position: 'relative',
+        overflow: 'hidden',
+      }}>
+        {/* Ambient grid overlay */}
+        <div style={{
+          position: 'absolute', inset: 0, pointerEvents: 'none',
+          backgroundImage: 'linear-gradient(var(--border-subtle) 1px, transparent 1px), linear-gradient(90deg, var(--border-subtle) 1px, transparent 1px)',
+          backgroundSize: '40px 40px',
+          opacity: 0.4,
+        }} />
+
+        <div style={{ position: 'relative', zIndex: 1 }}>
+          {/* Badge */}
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 14px', borderRadius: 100, background: 'rgba(124,58,237,0.12)', border: '1px solid rgba(124,58,237,0.25)', marginBottom: 24 }}>
+            <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--accent-green)' }} className="live-dot" />
+            <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--accent-purple-bright)', letterSpacing: '0.05em' }}>
+              Macro Intelligence · Live
+            </span>
+          </div>
+
+          <h1 style={{ fontSize: 52, fontWeight: 900, letterSpacing: -2, lineHeight: 1.05, margin: '0 0 16px', color: 'var(--text-primary)' }}>
+            Intelligent{' '}
+            <span className="gradient-text">Web3 Automation</span>
+          </h1>
+
+          <p style={{ fontSize: 17, color: 'var(--text-secondary)', maxWidth: 520, margin: '0 auto 32px', lineHeight: 1.6 }}>
             Execute flawless macro-driven strategies on Solana with our institutional-grade engine.
-          </Text>
-        </YStack>
+          </p>
 
-        <KPIRow />
+          <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
+            <Link to="/automations" style={{ textDecoration: 'none' }}>
+              <button className="btn-primary" style={{ height: 44, padding: '0 24px', borderRadius: 10, fontSize: 14 }}>
+                ⚡ Create Automation
+              </button>
+            </Link>
+            <Link to="/markets" style={{ textDecoration: 'none' }}>
+              <button className="btn-secondary" style={{ height: 44, padding: '0 24px', borderRadius: 10, fontSize: 14, cursor: 'pointer' }}>
+                🌐 View Markets
+              </button>
+            </Link>
+          </div>
+        </div>
+      </div>
 
-        {/* M2 vs Bitcoin Chart */}
-        <YStack paddingHorizontal="$4">
-          <ChartCard
-            title="M2 Supply vs Bitcoin"
-            subtitle="Correlation between monetary expansion and BTC price"
-          >
+      <div style={{ padding: '0 28px 40px', maxWidth: 1400, margin: '0 auto', width: '100%' }}>
+        {/* KPI strip */}
+        <div style={{ marginTop: 28, marginBottom: 32 }}>
+          <KPIRow />
+        </div>
+
+        {/* Charts grid */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+          <ChartCard title="M2 Supply vs Bitcoin" subtitle="Correlation between monetary expansion and BTC price">
             <LineChart
-              data={btcChartData}
-              secondaryData={m2Normalized}
-              label="BTC Price"
-              secondaryLabel="M2 Supply (normalized)"
-              color={Colors.neonGreen}
-              secondaryColor={Colors.indigo}
+              data={btcChartData} secondaryData={m2Normalized}
+              label="BTC Price" secondaryLabel="M2 Supply (normalized)"
+              color="#00FFA3" secondaryColor="#6366F1"
               isLoading={m2Loading || btcLoading}
-              selectedRange={btcRange}
-              onTimeRangeChange={setBtcRange}
+              selectedRange={btcRange} onTimeRangeChange={setBtcRange}
             />
           </ChartCard>
-        </YStack>
 
-        {/* Fed Funds Rate */}
-        <YStack paddingHorizontal="$4">
-          <ChartCard
-            title="Federal Funds Rate"
-            subtitle="US central bank interest rate target"
-          >
-            <LineChart
-              data={fedChartData}
-              label="Fed Funds Rate"
-              color={Colors.violet}
-              isLoading={fedLoading}
-              selectedRange={fedRange}
-              onTimeRangeChange={setFedRange}
-            />
-          </ChartCard>
-        </YStack>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+            <ChartCard title="Federal Funds Rate" subtitle="US central bank interest rate target">
+              <LineChart
+                data={fedChartData} label="Fed Funds Rate"
+                color="#A78BFA"
+                isLoading={fedLoading} selectedRange={fedRange} onTimeRangeChange={setFedRange}
+              />
+            </ChartCard>
+            <ChartCard title="Consumer Price Index" subtitle="US inflation tracking">
+              <LineChart
+                data={cpiChartData} label="CPI Index"
+                color="#F43F5E"
+                isLoading={cpiLoading} selectedRange={cpiRange} onTimeRangeChange={setCpiRange}
+              />
+            </ChartCard>
+          </div>
 
-        {/* CPI Inflation */}
-        <YStack paddingHorizontal="$4">
-          <ChartCard
-            title="Consumer Price Index"
-            subtitle="US inflation tracking"
-          >
-            <LineChart
-              data={cpiChartData}
-              label="CPI Index"
-              color={Colors.coralRed}
-              isLoading={cpiLoading}
-              selectedRange={cpiRange}
-              onTimeRangeChange={setCpiRange}
-            />
-          </ChartCard>
-        </YStack>
-
-        {/* Macro Calendar */}
-        <YStack paddingHorizontal="$4">
           <MacroOverlay />
-        </YStack>
-
-        {/* Crypto News Feed */}
-        <YStack paddingHorizontal="$4" paddingBottom="$8">
           <NewsRow />
-        </YStack>
-      </YStack>
+        </div>
+      </div>
     </PageShell>
   );
 }

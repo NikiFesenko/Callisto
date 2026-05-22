@@ -12,23 +12,38 @@ interface GlassCardProps extends React.HTMLAttributes<HTMLDivElement> {
   accessibilityLabel?: string;
 }
 
-export function GlassCard({ children, padding = '$4', elevated = false, style, width, className, glow, pressStyle, animation, accessibilityLabel, ...rest }: GlassCardProps) {
-  const p = typeof padding === 'string' && padding.startsWith('$') ? parseFloat(padding.slice(1)) * 4 : padding;
-  
-  let combinedClassName = "glass-card web3-glass-card";
-  if (className) combinedClassName += ` ${className}`;
-  if (glow) combinedClassName += ` glow-${glow}`;
-  
+export function GlassCard({
+  children,
+  padding = '$4',
+  elevated = false,
+  style,
+  width,
+  className,
+  glow,
+  pressStyle,
+  animation,
+  accessibilityLabel,
+  ...rest
+}: GlassCardProps) {
+  const p = typeof padding === 'string' && padding.startsWith('$')
+    ? parseFloat(padding.slice(1)) * 4
+    : padding;
+
+  const glowClass = glow ? ` glow-${glow}` : '';
+
   return (
-    <div className={combinedClassName} aria-label={accessibilityLabel} style={{
-      padding: p,
-      borderRadius: 16,
-      width,
-      boxShadow: elevated ? '0 8px 32px rgba(0, 0, 0, 0.4)' : undefined,
-      display: 'flex',
-      flexDirection: 'column',
-      ...style,
-    }} {...rest}>
+    <div
+      className={`colisto-card${elevated ? '-elevated' : ''}${glowClass}${className ? ` ${className}` : ''}`}
+      aria-label={accessibilityLabel}
+      style={{
+        padding: p,
+        width,
+        display: 'flex',
+        flexDirection: 'column',
+        ...style,
+      }}
+      {...rest}
+    >
       {children}
     </div>
   );

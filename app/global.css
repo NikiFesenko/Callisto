@@ -1,4 +1,140 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+/* ─── Design Token System ─────────────────────────────────────────────────── */
+/* Dark theme (default) */
+:root,
+[data-theme="dark"] {
+  --color-bg-deep:       #05070B;
+  --color-bg-base:       #0A0E17;
+  --color-bg-soft:       #18181b;
+  --color-bg-hover:      #27272a;
+  --color-bg-elevated:   #131720;
+
+  --color-nav-bg:        #0A0E17;
+  --color-border:        #1E293B;
+  --color-border-subtle: #18181b;
+
+  --color-text-primary:  #FAFAFA;
+  --color-text-secondary:#A1A1AA;
+  --color-text-muted:    #6B7280;
+
+  --color-btn-bg:        #1E293B;
+  --color-btn-border:    #334155;
+  --color-btn-text:      #E2E8F0;
+
+  --color-card-bg:       rgba(9, 9, 11, 0.65);
+  --color-card-border:   rgba(255, 255, 255, 0.06);
+  --color-card-hover:    rgba(24, 24, 27, 0.75);
+
+  --color-input-bg:      rgba(255, 255, 255, 0.04);
+  --color-input-border:  rgba(255, 255, 255, 0.1);
+
+  --shadow-card:         0 8px 32px rgba(0, 0, 0, 0.4);
+  --shadow-elevated:     0 16px 48px rgba(0, 0, 0, 0.6);
+
+  color-scheme: dark;
+}
+
+/* Light theme overrides */
+[data-theme="light"] {
+  --color-bg-deep:       #E8EDF5;
+  --color-bg-base:       #F1F5FD;
+  --color-bg-soft:       #FFFFFF;
+  --color-bg-hover:      #E2E8F0;
+  --color-bg-elevated:   #FFFFFF;
+
+  --color-nav-bg:        #FFFFFF;
+  --color-border:        #CBD5E1;
+  --color-border-subtle: #E2E8F0;
+
+  --color-text-primary:  #0F172A;
+  --color-text-secondary:#475569;
+  --color-text-muted:    #94A3B8;
+
+  --color-btn-bg:        #F1F5F9;
+  --color-btn-border:    #CBD5E1;
+  --color-btn-text:      #0F172A;
+
+  --color-card-bg:       rgba(255, 255, 255, 0.85);
+  --color-card-border:   rgba(0, 0, 0, 0.08);
+  --color-card-hover:    rgba(255, 255, 255, 0.95);
+
+  --color-input-bg:      rgba(0, 0, 0, 0.03);
+  --color-input-border:  rgba(0, 0, 0, 0.12);
+
+  --shadow-card:         0 4px 16px rgba(0, 0, 0, 0.08);
+  --shadow-elevated:     0 8px 32px rgba(0, 0, 0, 0.12);
+
+  color-scheme: light;
+}
+
+/* Apply theme tokens to core elements */
+[data-theme="light"] body,
+[data-theme="light"] #root {
+  background-color: var(--color-bg-deep);
+  color: var(--color-text-primary);
+}
+
+/* Light theme: GlassCard overrides */
+[data-theme="light"] .web3-glass-card,
+[data-theme="light"] [class*="glass"] {
+  background: var(--color-card-bg) !important;
+  border-color: var(--color-card-border) !important;
+  box-shadow: var(--shadow-card) !important;
+}
+
+/* Light theme: filter/strategy buttons */
+[data-theme="light"] .filter-tab-inactive {
+  background-color: var(--color-bg-soft) !important;
+  border-color: var(--color-border) !important;
+  color: var(--color-text-secondary) !important;
+}
+
+[data-theme="light"] .filter-tab-inactive:hover {
+  background-color: var(--color-bg-hover) !important;
+}
+
+/* Light theme: trigger cards */
+[data-theme="light"] .trigger-card-premium {
+  background: var(--color-bg-soft) !important;
+  border-color: var(--color-border) !important;
+  box-shadow: var(--shadow-card) !important;
+}
+
+/* Light theme: wallet adapter */
+[data-theme="light"] .wallet-adapter-modal-wrapper {
+  background: #FFFFFF;
+  box-shadow: var(--shadow-elevated);
+}
+
+[data-theme="light"] .wallet-adapter-button:not([disabled]):hover {
+  background-color: #F1F5F9;
+}
+
+/* Light theme: premium input */
+[data-theme="light"] .premium-input {
+  background-color: var(--color-input-bg) !important;
+  border-color: var(--color-input-border) !important;
+  color: var(--color-text-primary) !important;
+}
+
+/* Smooth theme transitions */
+* {
+  transition-property: background-color, border-color, color, box-shadow;
+  transition-duration: 200ms;
+  transition-timing-function: ease;
+}
+
+/* But don't transition transforms/opacity (breaks animations) */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────── */
+
 
 .wallet-adapter-button {
     background-color: transparent;

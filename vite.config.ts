@@ -15,9 +15,19 @@ export default defineConfig({
     global: 'window',
   },
   optimizeDeps: {
+    include: ['globe.gl', 'three'],
     esbuildOptions: {
       mainFields: ['module', 'main'],
       resolveExtensions: ['.web.js', '.js', '.ts', '.web.tsx', '.tsx', '.jsx'],
+    },
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          globe: ['globe.gl', 'three'],
+        },
+      },
     },
   },
 });
