@@ -14,6 +14,19 @@ export default defineConfig({
     'process.env': {},
     global: 'window',
   },
+  server: {
+    proxy: {
+      // Proxy Yahoo Finance API to bypass CORS in the browser
+      '/api/yahoo': {
+        target: 'https://query1.finance.yahoo.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/yahoo/, ''),
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
+        },
+      },
+    },
+  },
   optimizeDeps: {
     include: ['globe.gl', 'three'],
     esbuildOptions: {

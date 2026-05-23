@@ -1,0 +1,2402 @@
+[
+  {
+    "symbol": "AAPL",
+    "name": "Apple Inc.",
+    "sector": "Technology",
+    "country": "United States of America",
+    "lat": 37.33,
+    "lng": -122.03,
+    "price": 251.7,
+    "change24h": 3.88
+  },
+  {
+    "symbol": "MSFT",
+    "name": "Microsoft Corp.",
+    "sector": "Technology",
+    "country": "United States of America",
+    "lat": 47.64,
+    "lng": -122.13,
+    "price": 245.13,
+    "change24h": -0.73
+  },
+  {
+    "symbol": "NVDA",
+    "name": "NVIDIA Corp.",
+    "sector": "Technology",
+    "country": "United States of America",
+    "lat": 37.36,
+    "lng": -121.99,
+    "price": 85.78,
+    "change24h": -1.85
+  },
+  {
+    "symbol": "GOOGL",
+    "name": "Alphabet Inc.",
+    "sector": "Communication Services",
+    "country": "United States of America",
+    "lat": 37.42,
+    "lng": -122.08,
+    "price": 237.53,
+    "change24h": -0.54
+  },
+  {
+    "symbol": "META",
+    "name": "Meta Platforms",
+    "sector": "Communication Services",
+    "country": "United States of America",
+    "lat": 37.48,
+    "lng": -122.15,
+    "price": 244.2,
+    "change24h": 0.37
+  },
+  {
+    "symbol": "AVGO",
+    "name": "Broadcom Inc.",
+    "sector": "Technology",
+    "country": "United States of America",
+    "lat": 37.38,
+    "lng": -122.08,
+    "price": 271.37,
+    "change24h": 1.03
+  },
+  {
+    "symbol": "TSM",
+    "name": "Taiwan Semiconductor",
+    "sector": "Technology",
+    "country": "Taiwan",
+    "lat": 24.78,
+    "lng": 120.99,
+    "price": 96.9,
+    "change24h": 2.56
+  },
+  {
+    "symbol": "ASML",
+    "name": "ASML Holding NV",
+    "sector": "Technology",
+    "country": "Netherlands",
+    "lat": 51.45,
+    "lng": 5.48,
+    "price": 242.71,
+    "change24h": 1.71
+  },
+  {
+    "symbol": "ORCL",
+    "name": "Oracle Corp.",
+    "sector": "Technology",
+    "country": "United States of America",
+    "lat": 37.53,
+    "lng": -122.26,
+    "price": 309.82,
+    "change24h": -2.46
+  },
+  {
+    "symbol": "CRM",
+    "name": "Salesforce Inc.",
+    "sector": "Technology",
+    "country": "United States of America",
+    "lat": 37.79,
+    "lng": -122.4,
+    "price": 141.88,
+    "change24h": 0.47
+  },
+  {
+    "symbol": "AMD",
+    "name": "Advanced Micro Devices",
+    "sector": "Technology",
+    "country": "United States of America",
+    "lat": 37.33,
+    "lng": -121.99,
+    "price": 410.98,
+    "change24h": -0.1
+  },
+  {
+    "symbol": "INTC",
+    "name": "Intel Corp.",
+    "sector": "Technology",
+    "country": "United States of America",
+    "lat": 37.39,
+    "lng": -121.96,
+    "price": 324.41,
+    "change24h": 3.06
+  },
+  {
+    "symbol": "CSCO",
+    "name": "Cisco Systems",
+    "sector": "Technology",
+    "country": "United States of America",
+    "lat": 37.4,
+    "lng": -121.95,
+    "price": 371.09,
+    "change24h": 2.76
+  },
+  {
+    "symbol": "QCOM",
+    "name": "Qualcomm Inc.",
+    "sector": "Technology",
+    "country": "United States of America",
+    "lat": 32.9,
+    "lng": -117.2,
+    "price": 409.64,
+    "change24h": -1.19
+  },
+  {
+    "symbol": "TXN",
+    "name": "Texas Instruments",
+    "sector": "Technology",
+    "country": "United States of America",
+    "lat": 32.98,
+    "lng": -96.74,
+    "price": 280.38,
+    "change24h": 4.57
+  },
+  {
+    "symbol": "AMAT",
+    "name": "Applied Materials",
+    "sector": "Technology",
+    "country": "United States of America",
+    "lat": 37.37,
+    "lng": -121.97,
+    "price": 429.35,
+    "change24h": -0.77
+  },
+  {
+    "symbol": "LRCX",
+    "name": "Lam Research Corp.",
+    "sector": "Technology",
+    "country": "United States of America",
+    "lat": 37.43,
+    "lng": -122,
+    "price": 338.23,
+    "change24h": -1.09
+  },
+  {
+    "symbol": "KLAC",
+    "name": "KLA Corp.",
+    "sector": "Technology",
+    "country": "United States of America",
+    "lat": 37.39,
+    "lng": -121.96,
+    "price": 358.35,
+    "change24h": 0.19
+  },
+  {
+    "symbol": "MRVL",
+    "name": "Marvell Technology",
+    "sector": "Technology",
+    "country": "United States of America",
+    "lat": 37.39,
+    "lng": -122.08,
+    "price": 26.34,
+    "change24h": 0.31
+  },
+  {
+    "symbol": "MU",
+    "name": "Micron Technology",
+    "sector": "Technology",
+    "country": "United States of America",
+    "lat": 43.62,
+    "lng": -116.2,
+    "price": 18.76,
+    "change24h": -1.01
+  },
+  {
+    "symbol": "PANW",
+    "name": "Palo Alto Networks",
+    "sector": "Technology",
+    "country": "United States of America",
+    "lat": 37.45,
+    "lng": -122.14,
+    "price": 111.4,
+    "change24h": 2
+  },
+  {
+    "symbol": "SNOW",
+    "name": "Snowflake Inc.",
+    "sector": "Technology",
+    "country": "United States of America",
+    "lat": 37.73,
+    "lng": -121.93,
+    "price": 425.17,
+    "change24h": 1.31
+  },
+  {
+    "symbol": "NOW",
+    "name": "ServiceNow Inc.",
+    "sector": "Technology",
+    "country": "United States of America",
+    "lat": 37.39,
+    "lng": -121.96,
+    "price": 434.02,
+    "change24h": -3.5
+  },
+  {
+    "symbol": "ADBE",
+    "name": "Adobe Inc.",
+    "sector": "Technology",
+    "country": "United States of America",
+    "lat": 37.33,
+    "lng": -121.89,
+    "price": 110.75,
+    "change24h": 0.5
+  },
+  {
+    "symbol": "INTU",
+    "name": "Intuit Inc.",
+    "sector": "Technology",
+    "country": "United States of America",
+    "lat": 37.27,
+    "lng": -122.02,
+    "price": 389.22,
+    "change24h": -3.47
+  },
+  {
+    "symbol": "ADSK",
+    "name": "Autodesk Inc.",
+    "sector": "Technology",
+    "country": "United States of America",
+    "lat": 37.79,
+    "lng": -122.4,
+    "price": 400.94,
+    "change24h": 3.19
+  },
+  {
+    "symbol": "UBER",
+    "name": "Uber Technologies",
+    "sector": "Technology",
+    "country": "United States of America",
+    "lat": 37.77,
+    "lng": -122.41,
+    "price": 107.56,
+    "change24h": -3.25
+  },
+  {
+    "symbol": "LYFT",
+    "name": "Lyft Inc.",
+    "sector": "Technology",
+    "country": "United States of America",
+    "lat": 37.47,
+    "lng": -122.2,
+    "price": 311.74,
+    "change24h": -4.67
+  },
+  {
+    "symbol": "SNAP",
+    "name": "Snap Inc.",
+    "sector": "Communication Services",
+    "country": "United States of America",
+    "lat": 34.02,
+    "lng": -118.49,
+    "price": 243.48,
+    "change24h": 1.9
+  },
+  {
+    "symbol": "PINS",
+    "name": "Pinterest Inc.",
+    "sector": "Communication Services",
+    "country": "United States of America",
+    "lat": 37.77,
+    "lng": -122.41,
+    "price": 199.97,
+    "change24h": -4.9
+  },
+  {
+    "symbol": "TWTR",
+    "name": "X Corp.",
+    "sector": "Communication Services",
+    "country": "United States of America",
+    "lat": 37.77,
+    "lng": -122.41,
+    "price": 416.29,
+    "change24h": 0.15
+  },
+  {
+    "symbol": "RBLX",
+    "name": "Roblox Corp.",
+    "sector": "Communication Services",
+    "country": "United States of America",
+    "lat": 37.45,
+    "lng": -122.19,
+    "price": 449.88,
+    "change24h": -0.76
+  },
+  {
+    "symbol": "DDOG",
+    "name": "Datadog Inc.",
+    "sector": "Technology",
+    "country": "United States of America",
+    "lat": 40.75,
+    "lng": -73.98,
+    "price": 329,
+    "change24h": -2.4
+  },
+  {
+    "symbol": "CRWD",
+    "name": "CrowdStrike Holdings",
+    "sector": "Technology",
+    "country": "United States of America",
+    "lat": 30.39,
+    "lng": -97.73,
+    "price": 230.46,
+    "change24h": 2.92
+  },
+  {
+    "symbol": "ZS",
+    "name": "Zscaler Inc.",
+    "sector": "Technology",
+    "country": "United States of America",
+    "lat": 37.39,
+    "lng": -121.96,
+    "price": 163.6,
+    "change24h": -1.57
+  },
+  {
+    "symbol": "FTNT",
+    "name": "Fortinet Inc.",
+    "sector": "Technology",
+    "country": "United States of America",
+    "lat": 37.39,
+    "lng": -121.96,
+    "price": 244.87,
+    "change24h": -4.82
+  },
+  {
+    "symbol": "NET",
+    "name": "Cloudflare Inc.",
+    "sector": "Technology",
+    "country": "United States of America",
+    "lat": 37.78,
+    "lng": -122.42,
+    "price": 269.99,
+    "change24h": 2.32
+  },
+  {
+    "symbol": "HCP",
+    "name": "HashiCorp Inc.",
+    "sector": "Technology",
+    "country": "United States of America",
+    "lat": 37.77,
+    "lng": -122.41,
+    "price": 41.1,
+    "change24h": 4.65
+  },
+  {
+    "symbol": "MDB",
+    "name": "MongoDB Inc.",
+    "sector": "Technology",
+    "country": "United States of America",
+    "lat": 40.75,
+    "lng": -73.98,
+    "price": 74.16,
+    "change24h": -4.86
+  },
+  {
+    "symbol": "WDAY",
+    "name": "Workday Inc.",
+    "sector": "Technology",
+    "country": "United States of America",
+    "lat": 37.72,
+    "lng": -122.05,
+    "price": 29.35,
+    "change24h": -0.92
+  },
+  {
+    "symbol": "TEAM",
+    "name": "Atlassian Corp.",
+    "sector": "Technology",
+    "country": "Australia",
+    "lat": -33.87,
+    "lng": 151.21,
+    "price": 205.81,
+    "change24h": -4.48
+  },
+  {
+    "symbol": "SHOP",
+    "name": "Shopify Inc.",
+    "sector": "Technology",
+    "country": "Canada",
+    "lat": 45.42,
+    "lng": -75.7,
+    "price": 88,
+    "change24h": -2.86
+  },
+  {
+    "symbol": "SPOT",
+    "name": "Spotify Technology",
+    "sector": "Communication Services",
+    "country": "Sweden",
+    "lat": 59.33,
+    "lng": 18.07,
+    "price": 457.84,
+    "change24h": 2.97
+  },
+  {
+    "symbol": "BRK.B",
+    "name": "Berkshire Hathaway",
+    "sector": "Financials",
+    "country": "United States of America",
+    "lat": 41.27,
+    "lng": -96,
+    "price": 204.04,
+    "change24h": -1.07
+  },
+  {
+    "symbol": "JPM",
+    "name": "JPMorgan Chase",
+    "sector": "Financials",
+    "country": "United States of America",
+    "lat": 40.75,
+    "lng": -73.98,
+    "price": 311.94,
+    "change24h": -4.09
+  },
+  {
+    "symbol": "V",
+    "name": "Visa Inc.",
+    "sector": "Financials",
+    "country": "United States of America",
+    "lat": 37.39,
+    "lng": -121.96,
+    "price": 31.21,
+    "change24h": 0.12
+  },
+  {
+    "symbol": "MA",
+    "name": "Mastercard Inc.",
+    "sector": "Financials",
+    "country": "United States of America",
+    "lat": 40.74,
+    "lng": -73.98,
+    "price": 16.97,
+    "change24h": 1.88
+  },
+  {
+    "symbol": "BAC",
+    "name": "Bank of America",
+    "sector": "Financials",
+    "country": "United States of America",
+    "lat": 35.23,
+    "lng": -80.84,
+    "price": 187.7,
+    "change24h": -4.48
+  },
+  {
+    "symbol": "WFC",
+    "name": "Wells Fargo",
+    "sector": "Financials",
+    "country": "United States of America",
+    "lat": 37.79,
+    "lng": -122.4,
+    "price": 103.78,
+    "change24h": 0.75
+  },
+  {
+    "symbol": "GS",
+    "name": "Goldman Sachs",
+    "sector": "Financials",
+    "country": "United States of America",
+    "lat": 40.71,
+    "lng": -74.01,
+    "price": 99.98,
+    "change24h": -4.66
+  },
+  {
+    "symbol": "MS",
+    "name": "Morgan Stanley",
+    "sector": "Financials",
+    "country": "United States of America",
+    "lat": 40.76,
+    "lng": -73.98,
+    "price": 278.61,
+    "change24h": 3.97
+  },
+  {
+    "symbol": "AXP",
+    "name": "American Express",
+    "sector": "Financials",
+    "country": "United States of America",
+    "lat": 40.75,
+    "lng": -73.98,
+    "price": 54.49,
+    "change24h": 1.39
+  },
+  {
+    "symbol": "BLK",
+    "name": "BlackRock Inc.",
+    "sector": "Financials",
+    "country": "United States of America",
+    "lat": 40.75,
+    "lng": -73.98,
+    "price": 317.39,
+    "change24h": 0.82
+  },
+  {
+    "symbol": "SCHW",
+    "name": "Charles Schwab",
+    "sector": "Financials",
+    "country": "United States of America",
+    "lat": 32.77,
+    "lng": -96.8,
+    "price": 236.9,
+    "change24h": 1.14
+  },
+  {
+    "symbol": "C",
+    "name": "Citigroup Inc.",
+    "sector": "Financials",
+    "country": "United States of America",
+    "lat": 40.75,
+    "lng": -73.98,
+    "price": 71.53,
+    "change24h": 4.83
+  },
+  {
+    "symbol": "USB",
+    "name": "U.S. Bancorp",
+    "sector": "Financials",
+    "country": "United States of America",
+    "lat": 44.97,
+    "lng": -93.27,
+    "price": 126.21,
+    "change24h": -4.6
+  },
+  {
+    "symbol": "COF",
+    "name": "Capital One Financial",
+    "sector": "Financials",
+    "country": "United States of America",
+    "lat": 38.89,
+    "lng": -77.09,
+    "price": 389.24,
+    "change24h": -1.01
+  },
+  {
+    "symbol": "PGR",
+    "name": "Progressive Corp.",
+    "sector": "Financials",
+    "country": "United States of America",
+    "lat": 41.48,
+    "lng": -81.8,
+    "price": 171.12,
+    "change24h": -2.98
+  },
+  {
+    "symbol": "CB",
+    "name": "Chubb Ltd.",
+    "sector": "Financials",
+    "country": "Switzerland",
+    "lat": 47.38,
+    "lng": 8.54,
+    "price": 331.02,
+    "change24h": -2.01
+  },
+  {
+    "symbol": "HSBC",
+    "name": "HSBC Holdings plc",
+    "sector": "Financials",
+    "country": "United Kingdom",
+    "lat": 51.51,
+    "lng": -0.12,
+    "price": 162.97,
+    "change24h": -0.06
+  },
+  {
+    "symbol": "UBS",
+    "name": "UBS Group AG",
+    "sector": "Financials",
+    "country": "Switzerland",
+    "lat": 47.37,
+    "lng": 8.54,
+    "price": 194.44,
+    "change24h": -0.17
+  },
+  {
+    "symbol": "BNP",
+    "name": "BNP Paribas",
+    "sector": "Financials",
+    "country": "France",
+    "lat": 48.87,
+    "lng": 2.35,
+    "price": 204.19,
+    "change24h": -3.37
+  },
+  {
+    "symbol": "DB",
+    "name": "Deutsche Bank",
+    "sector": "Financials",
+    "country": "Germany",
+    "lat": 50.11,
+    "lng": 8.68,
+    "price": 436.28,
+    "change24h": 2.67
+  },
+  {
+    "symbol": "AMZN",
+    "name": "Amazon.com Inc.",
+    "sector": "Consumer Discretionary",
+    "country": "United States of America",
+    "lat": 47.62,
+    "lng": -122.34,
+    "price": 437.13,
+    "change24h": -2.42
+  },
+  {
+    "symbol": "TSLA",
+    "name": "Tesla Inc.",
+    "sector": "Consumer Discretionary",
+    "country": "United States of America",
+    "lat": 30.22,
+    "lng": -97.63,
+    "price": 140.6,
+    "change24h": 1.31
+  },
+  {
+    "symbol": "HD",
+    "name": "Home Depot",
+    "sector": "Consumer Discretionary",
+    "country": "United States of America",
+    "lat": 33.8,
+    "lng": -84.47,
+    "price": 72.73,
+    "change24h": 1.22
+  },
+  {
+    "symbol": "MCD",
+    "name": "McDonald's Corp.",
+    "sector": "Consumer Discretionary",
+    "country": "United States of America",
+    "lat": 41.87,
+    "lng": -87.62,
+    "price": 358.7,
+    "change24h": -4.17
+  },
+  {
+    "symbol": "SBUX",
+    "name": "Starbucks Corp.",
+    "sector": "Consumer Discretionary",
+    "country": "United States of America",
+    "lat": 47.58,
+    "lng": -122.33,
+    "price": 428.85,
+    "change24h": 3.37
+  },
+  {
+    "symbol": "NKE",
+    "name": "Nike Inc.",
+    "sector": "Consumer Discretionary",
+    "country": "United States of America",
+    "lat": 45.51,
+    "lng": -122.86,
+    "price": 42.94,
+    "change24h": -4.59
+  },
+  {
+    "symbol": "LOW",
+    "name": "Lowe's Companies",
+    "sector": "Consumer Discretionary",
+    "country": "United States of America",
+    "lat": 35.26,
+    "lng": -80.87,
+    "price": 455.58,
+    "change24h": -1.64
+  },
+  {
+    "symbol": "TJX",
+    "name": "TJX Companies",
+    "sector": "Consumer Discretionary",
+    "country": "United States of America",
+    "lat": 42.36,
+    "lng": -71.05,
+    "price": 198.88,
+    "change24h": -1.3
+  },
+  {
+    "symbol": "BKNG",
+    "name": "Booking Holdings",
+    "sector": "Consumer Discretionary",
+    "country": "United States of America",
+    "lat": 41.35,
+    "lng": -72.11,
+    "price": 378.88,
+    "change24h": 1.87
+  },
+  {
+    "symbol": "RCL",
+    "name": "Royal Caribbean Group",
+    "sector": "Consumer Discretionary",
+    "country": "United States of America",
+    "lat": 25.76,
+    "lng": -80.19,
+    "price": 303.55,
+    "change24h": 0.82
+  },
+  {
+    "symbol": "CCL",
+    "name": "Carnival Corp.",
+    "sector": "Consumer Discretionary",
+    "country": "United States of America",
+    "lat": 25.76,
+    "lng": -80.19,
+    "price": 290.04,
+    "change24h": -0.21
+  },
+  {
+    "symbol": "ABNB",
+    "name": "Airbnb Inc.",
+    "sector": "Consumer Discretionary",
+    "country": "United States of America",
+    "lat": 37.77,
+    "lng": -122.41,
+    "price": 44.94,
+    "change24h": 3.95
+  },
+  {
+    "symbol": "EXPE",
+    "name": "Expedia Group",
+    "sector": "Consumer Discretionary",
+    "country": "United States of America",
+    "lat": 47.62,
+    "lng": -122.35,
+    "price": 104.14,
+    "change24h": -2.96
+  },
+  {
+    "symbol": "EBAY",
+    "name": "eBay Inc.",
+    "sector": "Consumer Discretionary",
+    "country": "United States of America",
+    "lat": 37.38,
+    "lng": -121.97,
+    "price": 237.25,
+    "change24h": 1.11
+  },
+  {
+    "symbol": "ETSY",
+    "name": "Etsy Inc.",
+    "sector": "Consumer Discretionary",
+    "country": "United States of America",
+    "lat": 40.69,
+    "lng": -73.99,
+    "price": 112.69,
+    "change24h": -3.37
+  },
+  {
+    "symbol": "W",
+    "name": "Wayfair Inc.",
+    "sector": "Consumer Discretionary",
+    "country": "United States of America",
+    "lat": 42.36,
+    "lng": -71.05,
+    "price": 30.37,
+    "change24h": 1.88
+  },
+  {
+    "symbol": "F",
+    "name": "Ford Motor Company",
+    "sector": "Consumer Discretionary",
+    "country": "United States of America",
+    "lat": 42.33,
+    "lng": -83.05,
+    "price": 343.98,
+    "change24h": -2.92
+  },
+  {
+    "symbol": "GM",
+    "name": "General Motors",
+    "sector": "Consumer Discretionary",
+    "country": "United States of America",
+    "lat": 42.33,
+    "lng": -83.05,
+    "price": 308.34,
+    "change24h": 4.46
+  },
+  {
+    "symbol": "TM",
+    "name": "Toyota Motor Corp.",
+    "sector": "Consumer Discretionary",
+    "country": "Japan",
+    "lat": 35.08,
+    "lng": 137.15,
+    "price": 445.12,
+    "change24h": 0.8
+  },
+  {
+    "symbol": "HMC",
+    "name": "Honda Motor Co.",
+    "sector": "Consumer Discretionary",
+    "country": "Japan",
+    "lat": 35.69,
+    "lng": 139.69,
+    "price": 328.6,
+    "change24h": -4.97
+  },
+  {
+    "symbol": "RACE",
+    "name": "Ferrari NV",
+    "sector": "Consumer Discretionary",
+    "country": "Italy",
+    "lat": 44.53,
+    "lng": 10.86,
+    "price": 281.51,
+    "change24h": -0.23
+  },
+  {
+    "symbol": "LVMUY",
+    "name": "LVMH Moët Hennessy",
+    "sector": "Consumer Discretionary",
+    "country": "France",
+    "lat": 48.87,
+    "lng": 2.35,
+    "price": 321.28,
+    "change24h": 1.08
+  },
+  {
+    "symbol": "LRLCY",
+    "name": "L'Oréal SA",
+    "sector": "Consumer Discretionary",
+    "country": "France",
+    "lat": 48.84,
+    "lng": 2.35,
+    "price": 187.06,
+    "change24h": -1.07
+  },
+  {
+    "symbol": "WMT",
+    "name": "Walmart Inc.",
+    "sector": "Consumer Staples",
+    "country": "United States of America",
+    "lat": 36.36,
+    "lng": -94.21,
+    "price": 249.18,
+    "change24h": 2.69
+  },
+  {
+    "symbol": "COST",
+    "name": "Costco Wholesale",
+    "sector": "Consumer Staples",
+    "country": "United States of America",
+    "lat": 47.59,
+    "lng": -122.15,
+    "price": 262.8,
+    "change24h": 3.37
+  },
+  {
+    "symbol": "PG",
+    "name": "Procter & Gamble",
+    "sector": "Consumer Staples",
+    "country": "United States of America",
+    "lat": 39.1,
+    "lng": -84.51,
+    "price": 292.08,
+    "change24h": -3.45
+  },
+  {
+    "symbol": "KO",
+    "name": "Coca-Cola Co.",
+    "sector": "Consumer Staples",
+    "country": "United States of America",
+    "lat": 33.79,
+    "lng": -84.39,
+    "price": 334,
+    "change24h": 3.71
+  },
+  {
+    "symbol": "PEP",
+    "name": "PepsiCo Inc.",
+    "sector": "Consumer Staples",
+    "country": "United States of America",
+    "lat": 40.75,
+    "lng": -73.98,
+    "price": 187.59,
+    "change24h": -1
+  },
+  {
+    "symbol": "PM",
+    "name": "Philip Morris International",
+    "sector": "Consumer Staples",
+    "country": "United States of America",
+    "lat": 40.75,
+    "lng": -73.98,
+    "price": 236.34,
+    "change24h": -2.71
+  },
+  {
+    "symbol": "MDLZ",
+    "name": "Mondelez International",
+    "sector": "Consumer Staples",
+    "country": "United States of America",
+    "lat": 41.85,
+    "lng": -87.85,
+    "price": 191.71,
+    "change24h": 0.19
+  },
+  {
+    "symbol": "KHC",
+    "name": "Kraft Heinz Company",
+    "sector": "Consumer Staples",
+    "country": "United States of America",
+    "lat": 40.44,
+    "lng": -79.99,
+    "price": 412.6,
+    "change24h": 1.19
+  },
+  {
+    "symbol": "GIS",
+    "name": "General Mills",
+    "sector": "Consumer Staples",
+    "country": "United States of America",
+    "lat": 44.97,
+    "lng": -93.27,
+    "price": 146.7,
+    "change24h": -2.12
+  },
+  {
+    "symbol": "KR",
+    "name": "Kroger Co.",
+    "sector": "Consumer Staples",
+    "country": "United States of America",
+    "lat": 39.1,
+    "lng": -84.51,
+    "price": 382.04,
+    "change24h": 4.5
+  },
+  {
+    "symbol": "MO",
+    "name": "Altria Group",
+    "sector": "Consumer Staples",
+    "country": "United States of America",
+    "lat": 37.55,
+    "lng": -77.43,
+    "price": 405.21,
+    "change24h": -4.14
+  },
+  {
+    "symbol": "STZ",
+    "name": "Constellation Brands",
+    "sector": "Consumer Staples",
+    "country": "United States of America",
+    "lat": 43.15,
+    "lng": -77.61,
+    "price": 435.05,
+    "change24h": 0.84
+  },
+  {
+    "symbol": "CL",
+    "name": "Colgate-Palmolive",
+    "sector": "Consumer Staples",
+    "country": "United States of America",
+    "lat": 40.75,
+    "lng": -73.98,
+    "price": 165,
+    "change24h": -4.74
+  },
+  {
+    "symbol": "EL",
+    "name": "Estee Lauder Companies",
+    "sector": "Consumer Staples",
+    "country": "United States of America",
+    "lat": 40.75,
+    "lng": -73.98,
+    "price": 313.39,
+    "change24h": 3.76
+  },
+  {
+    "symbol": "NESN",
+    "name": "Nestle SA",
+    "sector": "Consumer Staples",
+    "country": "Switzerland",
+    "lat": 46.52,
+    "lng": 6.63,
+    "price": 115.24,
+    "change24h": 1.31
+  },
+  {
+    "symbol": "UL",
+    "name": "Unilever plc",
+    "sector": "Consumer Staples",
+    "country": "United Kingdom",
+    "lat": 51.51,
+    "lng": -0.12,
+    "price": 461.84,
+    "change24h": -2.25
+  },
+  {
+    "symbol": "LLY",
+    "name": "Eli Lilly",
+    "sector": "Healthcare",
+    "country": "United States of America",
+    "lat": 39.77,
+    "lng": -86.16,
+    "price": 218.23,
+    "change24h": -3.74
+  },
+  {
+    "symbol": "UNH",
+    "name": "UnitedHealth Group",
+    "sector": "Healthcare",
+    "country": "United States of America",
+    "lat": 44.85,
+    "lng": -93.47,
+    "price": 355.67,
+    "change24h": 4.66
+  },
+  {
+    "symbol": "JNJ",
+    "name": "Johnson & Johnson",
+    "sector": "Healthcare",
+    "country": "United States of America",
+    "lat": 40.57,
+    "lng": -74.3,
+    "price": 316.76,
+    "change24h": -3.62
+  },
+  {
+    "symbol": "MRK",
+    "name": "Merck & Co.",
+    "sector": "Healthcare",
+    "country": "United States of America",
+    "lat": 40.54,
+    "lng": -74.3,
+    "price": 461.8,
+    "change24h": 1.53
+  },
+  {
+    "symbol": "ABBV",
+    "name": "AbbVie Inc.",
+    "sector": "Healthcare",
+    "country": "United States of America",
+    "lat": 42.13,
+    "lng": -87.84,
+    "price": 371.58,
+    "change24h": -0.2
+  },
+  {
+    "symbol": "TMO",
+    "name": "Thermo Fisher Scientific",
+    "sector": "Healthcare",
+    "country": "United States of America",
+    "lat": 42.36,
+    "lng": -71.05,
+    "price": 75.31,
+    "change24h": -4.3
+  },
+  {
+    "symbol": "ABT",
+    "name": "Abbott Laboratories",
+    "sector": "Healthcare",
+    "country": "United States of America",
+    "lat": 42.21,
+    "lng": -87.92,
+    "price": 244.19,
+    "change24h": -1.86
+  },
+  {
+    "symbol": "PFE",
+    "name": "Pfizer Inc.",
+    "sector": "Healthcare",
+    "country": "United States of America",
+    "lat": 40.75,
+    "lng": -73.98,
+    "price": 259.51,
+    "change24h": 0.04
+  },
+  {
+    "symbol": "BMY",
+    "name": "Bristol-Myers Squibb",
+    "sector": "Healthcare",
+    "country": "United States of America",
+    "lat": 40.75,
+    "lng": -73.98,
+    "price": 186.28,
+    "change24h": -4.45
+  },
+  {
+    "symbol": "AMGN",
+    "name": "Amgen Inc.",
+    "sector": "Healthcare",
+    "country": "United States of America",
+    "lat": 34.13,
+    "lng": -118.45,
+    "price": 30.49,
+    "change24h": 4.82
+  },
+  {
+    "symbol": "GILD",
+    "name": "Gilead Sciences",
+    "sector": "Healthcare",
+    "country": "United States of America",
+    "lat": 37.57,
+    "lng": -121.99,
+    "price": 72.95,
+    "change24h": 1.21
+  },
+  {
+    "symbol": "ISRG",
+    "name": "Intuitive Surgical",
+    "sector": "Healthcare",
+    "country": "United States of America",
+    "lat": 37.39,
+    "lng": -121.96,
+    "price": 165.63,
+    "change24h": -3.85
+  },
+  {
+    "symbol": "VRTX",
+    "name": "Vertex Pharmaceuticals",
+    "sector": "Healthcare",
+    "country": "United States of America",
+    "lat": 42.36,
+    "lng": -71.05,
+    "price": 77.69,
+    "change24h": -4.47
+  },
+  {
+    "symbol": "REGN",
+    "name": "Regeneron Pharmaceuticals",
+    "sector": "Healthcare",
+    "country": "United States of America",
+    "lat": 41.09,
+    "lng": -73.74,
+    "price": 136.34,
+    "change24h": -1.14
+  },
+  {
+    "symbol": "MRNA",
+    "name": "Moderna Inc.",
+    "sector": "Healthcare",
+    "country": "United States of America",
+    "lat": 42.37,
+    "lng": -71.03,
+    "price": 72.6,
+    "change24h": 4.83
+  },
+  {
+    "symbol": "CI",
+    "name": "Cigna Group",
+    "sector": "Healthcare",
+    "country": "United States of America",
+    "lat": 41.87,
+    "lng": -87.62,
+    "price": 95.53,
+    "change24h": 3.42
+  },
+  {
+    "symbol": "CVS",
+    "name": "CVS Health Corp.",
+    "sector": "Healthcare",
+    "country": "United States of America",
+    "lat": 41.78,
+    "lng": -71.44,
+    "price": 387.63,
+    "change24h": -0.12
+  },
+  {
+    "symbol": "MCK",
+    "name": "McKesson Corp.",
+    "sector": "Healthcare",
+    "country": "United States of America",
+    "lat": 37.79,
+    "lng": -121.99,
+    "price": 191.65,
+    "change24h": 0.89
+  },
+  {
+    "symbol": "AZN",
+    "name": "AstraZeneca plc",
+    "sector": "Healthcare",
+    "country": "United Kingdom",
+    "lat": 52.2,
+    "lng": 0.12,
+    "price": 67.92,
+    "change24h": -3.04
+  },
+  {
+    "symbol": "NVO",
+    "name": "Novo Nordisk A/S",
+    "sector": "Healthcare",
+    "country": "Denmark",
+    "lat": 55.68,
+    "lng": 12.57,
+    "price": 306.72,
+    "change24h": -0.22
+  },
+  {
+    "symbol": "ROG",
+    "name": "Roche Holding AG",
+    "sector": "Healthcare",
+    "country": "Switzerland",
+    "lat": 47.38,
+    "lng": 8.54,
+    "price": 342.71,
+    "change24h": 0.1
+  },
+  {
+    "symbol": "SAN",
+    "name": "Sanofi SA",
+    "sector": "Healthcare",
+    "country": "France",
+    "lat": 48.87,
+    "lng": 2.35,
+    "price": 95.57,
+    "change24h": 2.71
+  },
+  {
+    "symbol": "BAYRY",
+    "name": "Bayer AG",
+    "sector": "Healthcare",
+    "country": "Germany",
+    "lat": 51.13,
+    "lng": 7.15,
+    "price": 232.2,
+    "change24h": 1.38
+  },
+  {
+    "symbol": "XOM",
+    "name": "Exxon Mobil",
+    "sector": "Energy",
+    "country": "United States of America",
+    "lat": 32.89,
+    "lng": -97.04,
+    "price": 50.97,
+    "change24h": 0.57
+  },
+  {
+    "symbol": "CVX",
+    "name": "Chevron Corp.",
+    "sector": "Energy",
+    "country": "United States of America",
+    "lat": 37.82,
+    "lng": -122,
+    "price": 139.78,
+    "change24h": -0.15
+  },
+  {
+    "symbol": "COP",
+    "name": "ConocoPhillips",
+    "sector": "Energy",
+    "country": "United States of America",
+    "lat": 29.77,
+    "lng": -95.37,
+    "price": 294.41,
+    "change24h": -4.94
+  },
+  {
+    "symbol": "EOG",
+    "name": "EOG Resources",
+    "sector": "Energy",
+    "country": "United States of America",
+    "lat": 29.77,
+    "lng": -95.37,
+    "price": 71.45,
+    "change24h": 1.65
+  },
+  {
+    "symbol": "SLB",
+    "name": "SLB (Schlumberger)",
+    "sector": "Energy",
+    "country": "United States of America",
+    "lat": 29.77,
+    "lng": -95.37,
+    "price": 425.25,
+    "change24h": 3.48
+  },
+  {
+    "symbol": "MPC",
+    "name": "Marathon Petroleum",
+    "sector": "Energy",
+    "country": "United States of America",
+    "lat": 40.82,
+    "lng": -81.2,
+    "price": 398.36,
+    "change24h": -2.07
+  },
+  {
+    "symbol": "PSX",
+    "name": "Phillips 66",
+    "sector": "Energy",
+    "country": "United States of America",
+    "lat": 29.77,
+    "lng": -95.37,
+    "price": 203.56,
+    "change24h": 2.28
+  },
+  {
+    "symbol": "VLO",
+    "name": "Valero Energy",
+    "sector": "Energy",
+    "country": "United States of America",
+    "lat": 29.42,
+    "lng": -98.49,
+    "price": 414.34,
+    "change24h": -1.86
+  },
+  {
+    "symbol": "PXD",
+    "name": "Pioneer Natural Resources",
+    "sector": "Energy",
+    "country": "United States of America",
+    "lat": 32.77,
+    "lng": -96.8,
+    "price": 149.27,
+    "change24h": 3.34
+  },
+  {
+    "symbol": "OXY",
+    "name": "Occidental Petroleum",
+    "sector": "Energy",
+    "country": "United States of America",
+    "lat": 29.77,
+    "lng": -95.37,
+    "price": 48.33,
+    "change24h": -2.15
+  },
+  {
+    "symbol": "BP",
+    "name": "BP plc",
+    "sector": "Energy",
+    "country": "United Kingdom",
+    "lat": 51.51,
+    "lng": -0.12,
+    "price": 71.68,
+    "change24h": -4.08
+  },
+  {
+    "symbol": "SHEL",
+    "name": "Shell plc",
+    "sector": "Energy",
+    "country": "Netherlands",
+    "lat": 52.37,
+    "lng": 4.9,
+    "price": 166.8,
+    "change24h": -3.85
+  },
+  {
+    "symbol": "TTE",
+    "name": "TotalEnergies SE",
+    "sector": "Energy",
+    "country": "France",
+    "lat": 48.87,
+    "lng": 2.35,
+    "price": 44.55,
+    "change24h": -2.66
+  },
+  {
+    "symbol": "RTX",
+    "name": "RTX Corp. (Raytheon)",
+    "sector": "Industrials",
+    "country": "United States of America",
+    "lat": 41.87,
+    "lng": -87.62,
+    "price": 125.96,
+    "change24h": 2.75
+  },
+  {
+    "symbol": "HON",
+    "name": "Honeywell International",
+    "sector": "Industrials",
+    "country": "United States of America",
+    "lat": 35.23,
+    "lng": -80.84,
+    "price": 346.26,
+    "change24h": -0.91
+  },
+  {
+    "symbol": "UPS",
+    "name": "United Parcel Service",
+    "sector": "Industrials",
+    "country": "United States of America",
+    "lat": 33.73,
+    "lng": -84.39,
+    "price": 48.84,
+    "change24h": 2.04
+  },
+  {
+    "symbol": "BA",
+    "name": "Boeing Company",
+    "sector": "Industrials",
+    "country": "United States of America",
+    "lat": 47.62,
+    "lng": -122.34,
+    "price": 261.68,
+    "change24h": -3.39
+  },
+  {
+    "symbol": "CAT",
+    "name": "Caterpillar Inc.",
+    "sector": "Industrials",
+    "country": "United States of America",
+    "lat": 40.66,
+    "lng": -89.59,
+    "price": 55.53,
+    "change24h": 1.37
+  },
+  {
+    "symbol": "DE",
+    "name": "Deere & Company",
+    "sector": "Industrials",
+    "country": "United States of America",
+    "lat": 41.51,
+    "lng": -90.55,
+    "price": 366.15,
+    "change24h": 4.01
+  },
+  {
+    "symbol": "GE",
+    "name": "GE Aerospace",
+    "sector": "Industrials",
+    "country": "United States of America",
+    "lat": 42.36,
+    "lng": -71.05,
+    "price": 350.19,
+    "change24h": 0.6
+  },
+  {
+    "symbol": "LMT",
+    "name": "Lockheed Martin",
+    "sector": "Industrials",
+    "country": "United States of America",
+    "lat": 38.89,
+    "lng": -77.09,
+    "price": 464.88,
+    "change24h": 3.04
+  },
+  {
+    "symbol": "NOC",
+    "name": "Northrop Grumman",
+    "sector": "Industrials",
+    "country": "United States of America",
+    "lat": 34.05,
+    "lng": -118.24,
+    "price": 215.82,
+    "change24h": -2.77
+  },
+  {
+    "symbol": "GD",
+    "name": "General Dynamics",
+    "sector": "Industrials",
+    "country": "United States of America",
+    "lat": 38.89,
+    "lng": -77.09,
+    "price": 223.33,
+    "change24h": -2.84
+  },
+  {
+    "symbol": "FDX",
+    "name": "FedEx Corp.",
+    "sector": "Industrials",
+    "country": "United States of America",
+    "lat": 35.06,
+    "lng": -90,
+    "price": 166.81,
+    "change24h": -2.51
+  },
+  {
+    "symbol": "EXPD",
+    "name": "Expeditors International",
+    "sector": "Industrials",
+    "country": "United States of America",
+    "lat": 47.62,
+    "lng": -122.34,
+    "price": 386.32,
+    "change24h": -3.53
+  },
+  {
+    "symbol": "CSX",
+    "name": "CSX Corp.",
+    "sector": "Industrials",
+    "country": "United States of America",
+    "lat": 30.33,
+    "lng": -81.66,
+    "price": 431.21,
+    "change24h": -1.85
+  },
+  {
+    "symbol": "UNP",
+    "name": "Union Pacific Corp.",
+    "sector": "Industrials",
+    "country": "United States of America",
+    "lat": 41.27,
+    "lng": -96,
+    "price": 195.23,
+    "change24h": -3.43
+  },
+  {
+    "symbol": "DAL",
+    "name": "Delta Air Lines",
+    "sector": "Industrials",
+    "country": "United States of America",
+    "lat": 33.64,
+    "lng": -84.43,
+    "price": 353.04,
+    "change24h": 1.84
+  },
+  {
+    "symbol": "UAL",
+    "name": "United Airlines Holdings",
+    "sector": "Industrials",
+    "country": "United States of America",
+    "lat": 41.97,
+    "lng": -87.91,
+    "price": 68.56,
+    "change24h": 3.04
+  },
+  {
+    "symbol": "AAL",
+    "name": "American Airlines Group",
+    "sector": "Industrials",
+    "country": "United States of America",
+    "lat": 32.9,
+    "lng": -97.04,
+    "price": 292.84,
+    "change24h": -0.2
+  },
+  {
+    "symbol": "AIRBUS",
+    "name": "Airbus SE",
+    "sector": "Industrials",
+    "country": "France",
+    "lat": 43.61,
+    "lng": 1.44,
+    "price": 243.15,
+    "change24h": -3.93
+  },
+  {
+    "symbol": "SAF",
+    "name": "Safran SA",
+    "sector": "Industrials",
+    "country": "France",
+    "lat": 48.87,
+    "lng": 2.35,
+    "price": 97.32,
+    "change24h": 3.91
+  },
+  {
+    "symbol": "SIE",
+    "name": "Siemens AG",
+    "sector": "Industrials",
+    "country": "Germany",
+    "lat": 48.14,
+    "lng": 11.58,
+    "price": 107.77,
+    "change24h": 0.52
+  },
+  {
+    "symbol": "NFLX",
+    "name": "Netflix Inc.",
+    "sector": "Communication Services",
+    "country": "United States of America",
+    "lat": 37.26,
+    "lng": -122.01,
+    "price": 279.87,
+    "change24h": 2.59
+  },
+  {
+    "symbol": "DIS",
+    "name": "Walt Disney Co.",
+    "sector": "Communication Services",
+    "country": "United States of America",
+    "lat": 34.05,
+    "lng": -118.24,
+    "price": 298.65,
+    "change24h": -4.14
+  },
+  {
+    "symbol": "CMCSA",
+    "name": "Comcast Corp.",
+    "sector": "Communication Services",
+    "country": "United States of America",
+    "lat": 40,
+    "lng": -75.15,
+    "price": 260.41,
+    "change24h": 3.41
+  },
+  {
+    "symbol": "VZ",
+    "name": "Verizon Communications",
+    "sector": "Communication Services",
+    "country": "United States of America",
+    "lat": 40.75,
+    "lng": -73.98,
+    "price": 35.62,
+    "change24h": 1.03
+  },
+  {
+    "symbol": "T",
+    "name": "AT&T Inc.",
+    "sector": "Communication Services",
+    "country": "United States of America",
+    "lat": 32.77,
+    "lng": -96.8,
+    "price": 50.74,
+    "change24h": 0.81
+  },
+  {
+    "symbol": "TMUS",
+    "name": "T-Mobile US",
+    "sector": "Communication Services",
+    "country": "United States of America",
+    "lat": 47.62,
+    "lng": -122.34,
+    "price": 117.62,
+    "change24h": 1.94
+  },
+  {
+    "symbol": "CHTR",
+    "name": "Charter Communications",
+    "sector": "Communication Services",
+    "country": "United States of America",
+    "lat": 41.22,
+    "lng": -73.84,
+    "price": 431.56,
+    "change24h": -4.69
+  },
+  {
+    "symbol": "PARA",
+    "name": "Paramount Global",
+    "sector": "Communication Services",
+    "country": "United States of America",
+    "lat": 40.75,
+    "lng": -73.98,
+    "price": 198.56,
+    "change24h": 2.41
+  },
+  {
+    "symbol": "WBD",
+    "name": "Warner Bros. Discovery",
+    "sector": "Communication Services",
+    "country": "United States of America",
+    "lat": 40.75,
+    "lng": -73.98,
+    "price": 81.87,
+    "change24h": 0.69
+  },
+  {
+    "symbol": "EA",
+    "name": "Electronic Arts",
+    "sector": "Communication Services",
+    "country": "United States of America",
+    "lat": 37.57,
+    "lng": -121.99,
+    "price": 238.22,
+    "change24h": 4.56
+  },
+  {
+    "symbol": "ATVI",
+    "name": "Activision Blizzard",
+    "sector": "Communication Services",
+    "country": "United States of America",
+    "lat": 34.05,
+    "lng": -118.24,
+    "price": 295.9,
+    "change24h": -4.62
+  },
+  {
+    "symbol": "TTWO",
+    "name": "Take-Two Interactive",
+    "sector": "Communication Services",
+    "country": "United States of America",
+    "lat": 40.75,
+    "lng": -73.98,
+    "price": 345.42,
+    "change24h": -3.67
+  },
+  {
+    "symbol": "SONY",
+    "name": "Sony Group Corp.",
+    "sector": "Communication Services",
+    "country": "Japan",
+    "lat": 35.69,
+    "lng": 139.69,
+    "price": 397.69,
+    "change24h": 0.61
+  },
+  {
+    "symbol": "NTES",
+    "name": "NetEase Inc.",
+    "sector": "Communication Services",
+    "country": "China",
+    "lat": 23.13,
+    "lng": 113.26,
+    "price": 174.16,
+    "change24h": -1.84
+  },
+  {
+    "symbol": "BIDU",
+    "name": "Baidu Inc.",
+    "sector": "Communication Services",
+    "country": "China",
+    "lat": 39.91,
+    "lng": 116.39,
+    "price": 455.79,
+    "change24h": -2.45
+  },
+  {
+    "symbol": "PDD",
+    "name": "PDD Holdings (Pinduoduo)",
+    "sector": "Consumer Discretionary",
+    "country": "China",
+    "lat": 31.23,
+    "lng": 121.47,
+    "price": 34.23,
+    "change24h": -1.31
+  },
+  {
+    "symbol": "JD",
+    "name": "JD.com Inc.",
+    "sector": "Consumer Discretionary",
+    "country": "China",
+    "lat": 39.91,
+    "lng": 116.39,
+    "price": 223.96,
+    "change24h": -0.55
+  },
+  {
+    "symbol": "BABA",
+    "name": "Alibaba Group",
+    "sector": "Consumer Discretionary",
+    "country": "China",
+    "lat": 30.27,
+    "lng": 120.15,
+    "price": 22.39,
+    "change24h": 3.03
+  },
+  {
+    "symbol": "9988.HK",
+    "name": "Alibaba HK",
+    "sector": "Consumer Discretionary",
+    "country": "Hong Kong",
+    "lat": 22.39,
+    "lng": 114.11,
+    "price": 202.69,
+    "change24h": 0.93
+  },
+  {
+    "symbol": "700.HK",
+    "name": "Tencent Holdings",
+    "sector": "Communication Services",
+    "country": "Hong Kong",
+    "lat": 22.39,
+    "lng": 114.11,
+    "price": 259.84,
+    "change24h": -3.45
+  },
+  {
+    "symbol": "035420",
+    "name": "NAVER Corp.",
+    "sector": "Communication Services",
+    "country": "South Korea",
+    "lat": 37.57,
+    "lng": 126.98,
+    "price": 24.01,
+    "change24h": -0.99
+  },
+  {
+    "symbol": "LIN",
+    "name": "Linde plc",
+    "sector": "Materials",
+    "country": "United Kingdom",
+    "lat": 51.51,
+    "lng": -0.12,
+    "price": 149.99,
+    "change24h": -0.22
+  },
+  {
+    "symbol": "APD",
+    "name": "Air Products and Chemicals",
+    "sector": "Materials",
+    "country": "United States of America",
+    "lat": 40.64,
+    "lng": -75.49,
+    "price": 34.08,
+    "change24h": -3.02
+  },
+  {
+    "symbol": "SHW",
+    "name": "Sherwin-Williams",
+    "sector": "Materials",
+    "country": "United States of America",
+    "lat": 41.48,
+    "lng": -81.8,
+    "price": 165.78,
+    "change24h": 0
+  },
+  {
+    "symbol": "FCX",
+    "name": "Freeport-McMoRan",
+    "sector": "Materials",
+    "country": "United States of America",
+    "lat": 33.45,
+    "lng": -112.07,
+    "price": 171.9,
+    "change24h": 2.45
+  },
+  {
+    "symbol": "NEM",
+    "name": "Newmont Corp.",
+    "sector": "Materials",
+    "country": "United States of America",
+    "lat": 39.74,
+    "lng": -104.99,
+    "price": 207.59,
+    "change24h": -0.4
+  },
+  {
+    "symbol": "VMC",
+    "name": "Vulcan Materials",
+    "sector": "Materials",
+    "country": "United States of America",
+    "lat": 33.52,
+    "lng": -86.8,
+    "price": 429.61,
+    "change24h": 1.6
+  },
+  {
+    "symbol": "MLM",
+    "name": "Martin Marietta Materials",
+    "sector": "Materials",
+    "country": "United States of America",
+    "lat": 35.78,
+    "lng": -78.64,
+    "price": 217.66,
+    "change24h": 4.43
+  },
+  {
+    "symbol": "BHP",
+    "name": "BHP Group",
+    "sector": "Materials",
+    "country": "Australia",
+    "lat": -27.47,
+    "lng": 153.03,
+    "price": 204.31,
+    "change24h": 1.51
+  },
+  {
+    "symbol": "RIO",
+    "name": "Rio Tinto Group",
+    "sector": "Materials",
+    "country": "United Kingdom",
+    "lat": 51.51,
+    "lng": -0.12,
+    "price": 294.04,
+    "change24h": 3.91
+  },
+  {
+    "symbol": "VALE",
+    "name": "Vale S.A.",
+    "sector": "Materials",
+    "country": "Brazil",
+    "lat": -22.91,
+    "lng": -43.17,
+    "price": 155.31,
+    "change24h": 1.04
+  },
+  {
+    "symbol": "GLEN",
+    "name": "Glencore plc",
+    "sector": "Materials",
+    "country": "Switzerland",
+    "lat": 47.17,
+    "lng": 8.52,
+    "price": 377.26,
+    "change24h": 0.1
+  },
+  {
+    "symbol": "AMT",
+    "name": "American Tower Corp.",
+    "sector": "Real Estate",
+    "country": "United States of America",
+    "lat": 42.36,
+    "lng": -71.05,
+    "price": 336.26,
+    "change24h": 4.64
+  },
+  {
+    "symbol": "PLD",
+    "name": "Prologis Inc.",
+    "sector": "Real Estate",
+    "country": "United States of America",
+    "lat": 37.79,
+    "lng": -122.4,
+    "price": 321.87,
+    "change24h": 4.84
+  },
+  {
+    "symbol": "EQIX",
+    "name": "Equinix Inc.",
+    "sector": "Real Estate",
+    "country": "United States of America",
+    "lat": 37.39,
+    "lng": -121.96,
+    "price": 181.66,
+    "change24h": -3.56
+  },
+  {
+    "symbol": "WELL",
+    "name": "Welltower Inc.",
+    "sector": "Real Estate",
+    "country": "United States of America",
+    "lat": 41.66,
+    "lng": -83.56,
+    "price": 255.9,
+    "change24h": 2.56
+  },
+  {
+    "symbol": "SPG",
+    "name": "Simon Property Group",
+    "sector": "Real Estate",
+    "country": "United States of America",
+    "lat": 39.77,
+    "lng": -86.16,
+    "price": 35.49,
+    "change24h": 3.65
+  },
+  {
+    "symbol": "O",
+    "name": "Realty Income Corp.",
+    "sector": "Real Estate",
+    "country": "United States of America",
+    "lat": 32.9,
+    "lng": -117.2,
+    "price": 218.36,
+    "change24h": -3.78
+  },
+  {
+    "symbol": "CCI",
+    "name": "Crown Castle Inc.",
+    "sector": "Real Estate",
+    "country": "United States of America",
+    "lat": 29.77,
+    "lng": -95.37,
+    "price": 118.85,
+    "change24h": -1.25
+  },
+  {
+    "symbol": "DLR",
+    "name": "Digital Realty Trust",
+    "sector": "Real Estate",
+    "country": "United States of America",
+    "lat": 37.77,
+    "lng": -122.41,
+    "price": 408.4,
+    "change24h": 3.51
+  },
+  {
+    "symbol": "NEE",
+    "name": "NextEra Energy",
+    "sector": "Utilities",
+    "country": "United States of America",
+    "lat": 26.71,
+    "lng": -80.05,
+    "price": 55.04,
+    "change24h": 0.4
+  },
+  {
+    "symbol": "DUK",
+    "name": "Duke Energy",
+    "sector": "Utilities",
+    "country": "United States of America",
+    "lat": 35.23,
+    "lng": -80.84,
+    "price": 453.01,
+    "change24h": 1.37
+  },
+  {
+    "symbol": "SO",
+    "name": "Southern Company",
+    "sector": "Utilities",
+    "country": "United States of America",
+    "lat": 33.79,
+    "lng": -84.39,
+    "price": 47.75,
+    "change24h": 0.15
+  },
+  {
+    "symbol": "D",
+    "name": "Dominion Energy",
+    "sector": "Utilities",
+    "country": "United States of America",
+    "lat": 37.55,
+    "lng": -77.43,
+    "price": 98.55,
+    "change24h": -3.03
+  },
+  {
+    "symbol": "AEP",
+    "name": "American Electric Power",
+    "sector": "Utilities",
+    "country": "United States of America",
+    "lat": 39.96,
+    "lng": -82.99,
+    "price": 331.09,
+    "change24h": -1.33
+  },
+  {
+    "symbol": "EXC",
+    "name": "Exelon Corp.",
+    "sector": "Utilities",
+    "country": "United States of America",
+    "lat": 41.87,
+    "lng": -87.62,
+    "price": 380.06,
+    "change24h": -0.62
+  },
+  {
+    "symbol": "XEL",
+    "name": "Xcel Energy",
+    "sector": "Utilities",
+    "country": "United States of America",
+    "lat": 44.97,
+    "lng": -93.27,
+    "price": 171.15,
+    "change24h": -2.19
+  },
+  {
+    "symbol": "PCG",
+    "name": "PG&E Corp.",
+    "sector": "Utilities",
+    "country": "United States of America",
+    "lat": 37.79,
+    "lng": -122.4,
+    "price": 436.36,
+    "change24h": -2.3
+  },
+  {
+    "symbol": "COIN",
+    "name": "Coinbase Global",
+    "sector": "Financials",
+    "country": "United States of America",
+    "lat": 37.79,
+    "lng": -122.4,
+    "price": 352.28,
+    "change24h": -2.12
+  },
+  {
+    "symbol": "MSTR",
+    "name": "MicroStrategy Inc.",
+    "sector": "Technology",
+    "country": "United States of America",
+    "lat": 38.89,
+    "lng": -77.09,
+    "price": 41.72,
+    "change24h": 2.1
+  },
+  {
+    "symbol": "MARA",
+    "name": "Marathon Digital Holdings",
+    "sector": "Technology",
+    "country": "United States of America",
+    "lat": 36.17,
+    "lng": -115.14,
+    "price": 63.81,
+    "change24h": -0.29
+  },
+  {
+    "symbol": "RIOT",
+    "name": "Riot Platforms Inc.",
+    "sector": "Technology",
+    "country": "United States of America",
+    "lat": 37.33,
+    "lng": -121.89,
+    "price": 76.65,
+    "change24h": 0.36
+  },
+  {
+    "symbol": "HIVE",
+    "name": "HIVE Digital Technologies",
+    "sector": "Technology",
+    "country": "Canada",
+    "lat": 49.25,
+    "lng": -123.12,
+    "price": 25.47,
+    "change24h": 2.82
+  },
+  {
+    "symbol": "BITF",
+    "name": "Bitfarms Ltd.",
+    "sector": "Technology",
+    "country": "Canada",
+    "lat": 45.42,
+    "lng": -75.7,
+    "price": 329.96,
+    "change24h": 3.16
+  },
+  {
+    "symbol": "SAP",
+    "name": "SAP SE",
+    "sector": "Technology",
+    "country": "Germany",
+    "lat": 49.29,
+    "lng": 8.64,
+    "price": 315.2,
+    "change24h": -2.11
+  },
+  {
+    "symbol": "ASOMY",
+    "name": "ASOMO Holdings",
+    "sector": "Technology",
+    "country": "Netherlands",
+    "lat": 52.37,
+    "lng": 4.9,
+    "price": 191.05,
+    "change24h": 1.27
+  },
+  {
+    "symbol": "NXPI",
+    "name": "NXP Semiconductors",
+    "sector": "Technology",
+    "country": "Netherlands",
+    "lat": 51.44,
+    "lng": 5.48,
+    "price": 328.56,
+    "change24h": 3.23
+  },
+  {
+    "symbol": "ERIC",
+    "name": "Ericsson AB",
+    "sector": "Technology",
+    "country": "Sweden",
+    "lat": 59.33,
+    "lng": 18.07,
+    "price": 428.95,
+    "change24h": -0.8
+  },
+  {
+    "symbol": "NOK",
+    "name": "Nokia Corp.",
+    "sector": "Technology",
+    "country": "Finland",
+    "lat": 60.17,
+    "lng": 24.94,
+    "price": 414.26,
+    "change24h": 3.63
+  },
+  {
+    "symbol": "STM",
+    "name": "STMicroelectronics NV",
+    "sector": "Technology",
+    "country": "Switzerland",
+    "lat": 46.2,
+    "lng": 6.15,
+    "price": 255.16,
+    "change24h": -2.52
+  },
+  {
+    "symbol": "INFY",
+    "name": "Infosys Ltd.",
+    "sector": "Technology",
+    "country": "India",
+    "lat": 12.97,
+    "lng": 77.59,
+    "price": 310.48,
+    "change24h": -3.05
+  },
+  {
+    "symbol": "WIT",
+    "name": "Wipro Ltd.",
+    "sector": "Technology",
+    "country": "India",
+    "lat": 12.97,
+    "lng": 77.59,
+    "price": 313.5,
+    "change24h": 4.63
+  },
+  {
+    "symbol": "HDB",
+    "name": "HDFC Bank Ltd.",
+    "sector": "Financials",
+    "country": "India",
+    "lat": 19.08,
+    "lng": 72.88,
+    "price": 393.06,
+    "change24h": -2.5
+  },
+  {
+    "symbol": "IBN",
+    "name": "ICICI Bank Ltd.",
+    "sector": "Financials",
+    "country": "India",
+    "lat": 22.57,
+    "lng": 88.36,
+    "price": 126.51,
+    "change24h": 3.69
+  },
+  {
+    "symbol": "RELIANCE",
+    "name": "Reliance Industries",
+    "sector": "Energy",
+    "country": "India",
+    "lat": 19.08,
+    "lng": 72.88,
+    "price": 131.58,
+    "change24h": 1.97
+  },
+  {
+    "symbol": "2330",
+    "name": "TSMC (TW)",
+    "sector": "Technology",
+    "country": "Taiwan",
+    "lat": 24.78,
+    "lng": 120.99,
+    "price": 229.43,
+    "change24h": 1.79
+  },
+  {
+    "symbol": "005930",
+    "name": "Samsung Electronics",
+    "sector": "Technology",
+    "country": "South Korea",
+    "lat": 37.57,
+    "lng": 126.98,
+    "price": 139.13,
+    "change24h": 3.68
+  },
+  {
+    "symbol": "066570",
+    "name": "LG Electronics",
+    "sector": "Technology",
+    "country": "South Korea",
+    "lat": 37.57,
+    "lng": 126.98,
+    "price": 327.38,
+    "change24h": 0.92
+  },
+  {
+    "symbol": "7203",
+    "name": "Toyota Motor Corp.",
+    "sector": "Consumer Discretionary",
+    "country": "Japan",
+    "lat": 35.08,
+    "lng": 137.15,
+    "price": 174.34,
+    "change24h": 3.85
+  },
+  {
+    "symbol": "6758",
+    "name": "Sony Group Corp.",
+    "sector": "Communication Services",
+    "country": "Japan",
+    "lat": 35.69,
+    "lng": 139.69,
+    "price": 328.14,
+    "change24h": 3.91
+  },
+  {
+    "symbol": "6861",
+    "name": "Keyence Corp.",
+    "sector": "Technology",
+    "country": "Japan",
+    "lat": 35.69,
+    "lng": 139.69,
+    "price": 36.31,
+    "change24h": -1.98
+  },
+  {
+    "symbol": "0700",
+    "name": "Tencent Holdings (HK)",
+    "sector": "Communication Services",
+    "country": "Hong Kong",
+    "lat": 22.39,
+    "lng": 114.11,
+    "price": 25.84,
+    "change24h": -2.12
+  },
+  {
+    "symbol": "CBA",
+    "name": "Commonwealth Bank",
+    "sector": "Financials",
+    "country": "Australia",
+    "lat": -33.87,
+    "lng": 151.21,
+    "price": 234.84,
+    "change24h": 4.47
+  },
+  {
+    "symbol": "BHP.AX",
+    "name": "BHP Group (AU)",
+    "sector": "Materials",
+    "country": "Australia",
+    "lat": -27.47,
+    "lng": 153.03,
+    "price": 397.43,
+    "change24h": 1.84
+  },
+  {
+    "symbol": "ENGI",
+    "name": "Engie SA",
+    "sector": "Utilities",
+    "country": "France",
+    "lat": 48.87,
+    "lng": 2.35,
+    "price": 67.52,
+    "change24h": -4.85
+  },
+  {
+    "symbol": "ENEL",
+    "name": "Enel SpA",
+    "sector": "Utilities",
+    "country": "Italy",
+    "lat": 41.9,
+    "lng": 12.49,
+    "price": 82.63,
+    "change24h": -2.97
+  },
+  {
+    "symbol": "IBE",
+    "name": "Iberdrola SA",
+    "sector": "Utilities",
+    "country": "Spain",
+    "lat": 40.42,
+    "lng": -3.7,
+    "price": 449.46,
+    "change24h": 0.89
+  },
+  {
+    "symbol": "SU",
+    "name": "Schneider Electric",
+    "sector": "Industrials",
+    "country": "France",
+    "lat": 48.87,
+    "lng": 2.35,
+    "price": 255.25,
+    "change24h": -1.79
+  },
+  {
+    "symbol": "ABB",
+    "name": "ABB Ltd.",
+    "sector": "Industrials",
+    "country": "Switzerland",
+    "lat": 47.38,
+    "lng": 8.54,
+    "price": 245.95,
+    "change24h": 1.84
+  },
+  {
+    "symbol": "VOLVY",
+    "name": "Volvo Group",
+    "sector": "Industrials",
+    "country": "Sweden",
+    "lat": 57.71,
+    "lng": 11.97,
+    "price": 121.94,
+    "change24h": -4.48
+  },
+  {
+    "symbol": "ARM",
+    "name": "Arm Holdings plc",
+    "sector": "Technology",
+    "country": "United Kingdom",
+    "lat": 52.2,
+    "lng": 0.12,
+    "price": 428.36,
+    "change24h": -4.71
+  },
+  {
+    "symbol": "AMSL",
+    "name": "ASMSL Group NV",
+    "sector": "Technology",
+    "country": "Netherlands",
+    "lat": 51.44,
+    "lng": 5.48,
+    "price": 102.25,
+    "change24h": -4.66
+  }
+]

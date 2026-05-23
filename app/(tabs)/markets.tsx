@@ -1,5 +1,10 @@
 // @ts-nocheck
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
+import { useWatchlistStore } from '@/src/store/useWatchlistStore';
+import { getStockColor } from '@/src/lib/stockColors';
+import { CompanyNewsDrawer } from '@/src/components/watchlist/CompanyNewsDrawer';
+import topStocksData from '@/src/lib/data/top_stocks.json';
+import { GEO_HOTSPOTS, SEVERITY_PULSE, type GeoHotspot } from '@/src/lib/geoHotspots';
 
 // ─── Financial Regions ────────────────────────────────────────────────────────
 const FINANCIAL_REGIONS = [
@@ -59,6 +64,40 @@ const FINANCIAL_REGIONS = [
   },
 ];
 
+// ─── Mock News Data ───────────────────────────────────────────────────────────
+const REGION_NEWS: Record<string, Array<{ title: string; summary: string; time: string; source: string; impact: 'high' | 'medium' | 'low'; link: string }>> = {
+  'North America': [
+    { title: 'Fed Signals Potential Rate Cut in Q3', summary: 'Federal Reserve chair indicates inflation cooling faster than expected, prompting tech rally.', time: '2h ago', source: 'Bloomberg', impact: 'high', link: '#' },
+    { title: 'SEC Approves New Crypto Spot ETFs', summary: 'Regulatory body greenlights several spot Ethereum ETFs, boosting crypto market capitalization.', time: '5h ago', source: 'CoinDesk', impact: 'high', link: '#' },
+    { title: 'Tech Giants Announce AI Infrastructure Fund', summary: 'Major silicon valley companies pool $50B for decentralized AI computing networks.', time: '12h ago', source: 'Reuters', impact: 'medium', link: '#' },
+  ],
+  'Europe': [
+    { title: 'ECB Maintains Interest Rates', summary: 'European Central Bank holds rates steady amid mixed economic signals from Germany and France.', time: '1h ago', source: 'Financial Times', impact: 'high', link: '#' },
+    { title: 'MiCA Framework Fully Implemented', summary: 'EU finalizes crypto-asset regulatory framework, bringing clarity to continental exchanges.', time: '4h ago', source: 'CoinTelegraph', impact: 'high', link: '#' },
+    { title: 'LSE Welcomes First Blockchain Bonds', summary: 'London Stock Exchange successfully pilots tokenized bond issuance on public ledger.', time: '8h ago', source: 'Reuters', impact: 'medium', link: '#' },
+  ],
+  'Asia Pacific': [
+    { title: 'BOJ Considers Yield Curve Control Tweak', summary: 'Bank of Japan hints at policy normalization, sending ripples through Asian tech equities.', time: '3h ago', source: 'Nikkei Asia', impact: 'high', link: '#' },
+    { title: 'HKEX Crypto ETF Trading Surges', summary: 'Hong Kong crypto ETFs see record daily volume as mainland investors seek exposure.', time: '6h ago', source: 'South China Morning Post', impact: 'high', link: '#' },
+    { title: 'PBOC Announces Digital Yuan Expansion', summary: 'China pushes further adoption of CBDC in cross-border settlements with regional partners.', time: '14h ago', source: 'Bloomberg', impact: 'medium', link: '#' },
+  ],
+  'Middle East': [
+    { title: 'UAE Unveils Golden Visa for Web3 Founders', summary: 'Dubai and Abu Dhabi expand residency programs to attract global blockchain talent.', time: '4h ago', source: 'Gulf News', impact: 'medium', link: '#' },
+    { title: 'Tadawul Hits All-Time High', summary: 'Saudi stock exchange rallies on energy sector profits and tech diversification plans.', time: '7h ago', source: 'Al Jazeera', impact: 'high', link: '#' },
+    { title: 'Sovereign Fund Allocates to Bitcoin', summary: 'Major regional sovereign wealth fund reportedly beginning direct Bitcoin purchases.', time: '1d ago', source: 'CoinDesk', impact: 'high', link: '#' },
+  ],
+  'Latin America': [
+    { title: 'Brazil Central Bank advances DREX Phase 2', summary: 'Brazilian digital currency testing moves to smart contract functionality with major banks.', time: '5h ago', source: 'Reuters', impact: 'medium', link: '#' },
+    { title: 'Argentina Crypto Adoption Accelerates', summary: 'Inflation hedges drive record volume on local exchanges as regulations soften.', time: '9h ago', source: 'CoinTelegraph', impact: 'high', link: '#' },
+    { title: 'B3 Exchange Lists Solana ETP', summary: 'Brazilian stock exchange expands crypto offerings with new Solana exchange-traded product.', time: '1d ago', source: 'Bloomberg', impact: 'medium', link: '#' },
+  ],
+  'Africa': [
+    { title: 'Nigeria Lifts Banking Ban on Crypto', summary: 'Central Bank of Nigeria issues new guidelines allowing banks to service crypto firms.', time: '2h ago', source: 'Financial Times', impact: 'high', link: '#' },
+    { title: 'Mobile Money Interoperability Network Launches', summary: 'Pan-African payments network goes live, integrating with major stablecoins.', time: '6h ago', source: 'TechCrunch', impact: 'high', link: '#' },
+    { title: 'JSE Proposes Carbon Credit Tokenization', summary: 'Johannesburg Stock Exchange plans to list tokenized green assets to fund transition.', time: '1d ago', source: 'Reuters', impact: 'medium', link: '#' },
+  ]
+};
+
 function hexToRgb(hex: string) {
   return {
     r: parseInt(hex.slice(1, 3), 16),
@@ -108,6 +147,128 @@ const STARS = Array.from({ length: 150 }, (_, i) => ({
   delay: (i % 3).toFixed(1),
 }));
 
+// ─── GeoNewsDrawer ─────────────────────────────────────────────────────────────
+function GeoNewsDrawer({ hotspot, onClose }: { hotspot: GeoHotspot; onClose: () => void }) {
+  const [news, setNews] = React.useState<any[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  const [visible, setVisible] = React.useState(false);
+
+  const HIGH_IMPACT_WORDS = ['war','attack','sanction','missile','coup','conflict','ceasefire','invasion','airstrike','nuclear','protest','explosion','crisis','rally','plunge','surge','ban','embargo'];
+
+  React.useEffect(() => { requestAnimationFrame(() => setVisible(true)); }, []);
+
+  React.useEffect(() => {
+    let alive = true;
+    setLoading(true);
+    (async () => {
+      try {
+        const q = encodeURIComponent(hotspot.newsQuery);
+        const rssUrl = encodeURIComponent(`https://news.google.com/rss/search?q=${q}&hl=en-US&gl=US&ceid=US:en`);
+        const res = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${rssUrl}`);
+        const data = await res.json();
+        if (data.status === 'ok' && data.items && alive) {
+          const parsed = data.items.slice(0, 7).map((item: any) => {
+            const parts = item.title.split(' - ');
+            const source = parts.length > 1 ? parts.pop()!.trim() : 'News';
+            const title = parts.join(' - ').trim();
+            const text = (title + ' ' + (item.description || '')).toLowerCase();
+            const isHigh = HIGH_IMPACT_WORDS.some(w => text.includes(w));
+            const pubDate = new Date(item.pubDate);
+            const diffH = Math.floor((Date.now() - pubDate.getTime()) / 3_600_000);
+            const timeStr = diffH < 1 ? 'Just now' : diffH < 24 ? `${diffH}h ago` : `${Math.floor(diffH/24)}d ago`;
+            const summary = (item.description || '').replace(/<[^>]+>/g, '').replace(/\s+/g,' ').trim().slice(0,130);
+            return { title, summary: summary ? summary + '…' : '', time: timeStr, source, impact: isHigh ? 'high' : 'medium', link: item.link };
+          });
+          setNews(parsed);
+        }
+      } catch(e) { console.error(e); }
+      finally { if (alive) setLoading(false); }
+    })();
+    return () => { alive = false; };
+  }, [hotspot.id]);
+
+  const handleClose = () => { setVisible(false); setTimeout(onClose, 300); };
+  const { r, g, b } = hexToRgb(hotspot.color);
+  const severityLabel = hotspot.severity === 'critical' ? '🔴 CRITICAL' : hotspot.severity === 'high' ? '🟠 HIGH RISK' : '🟡 MEDIUM RISK';
+
+  return (
+    <>
+      <div onClick={handleClose} style={{ position:'fixed',inset:0,zIndex:200,background:'rgba(0,0,0,0.5)',backdropFilter:'blur(4px)',opacity:visible?1:0,transition:'opacity 0.3s ease' }} />
+      <div style={{
+        position:'fixed',top:0,right:0,bottom:0,zIndex:201,
+        width:'100%',maxWidth:440,
+        background:'rgba(5,8,20,0.98)',
+        borderLeft:`1px solid rgba(${r},${g},${b},0.35)`,
+        boxShadow:`-24px 0 64px rgba(0,0,0,0.85), 0 0 40px rgba(${r},${g},${b},0.12)`,
+        display:'flex',flexDirection:'column',
+        transform:visible?'translateX(0)':'translateX(100%)',
+        transition:'transform 0.35s cubic-bezier(0.16,1,0.3,1)',
+        overflowY:'auto',
+      }}>
+        {/* Header */}
+        <div style={{ padding:'24px 24px 20px', borderBottom:`1px solid rgba(${r},${g},${b},0.12)`, background:`rgba(${r},${g},${b},0.04)`, flexShrink:0 }}>
+          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start' }}>
+            <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+              {/* Diamond icon */}
+              <div style={{ width:44,height:44,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0 }}>
+                <div style={{ width:22,height:22,background:hotspot.color,transform:'rotate(45deg)',borderRadius:3,boxShadow:`0 0 16px ${hotspot.color}` }} />
+              </div>
+              <div>
+                <div style={{ fontSize:19,fontWeight:800,color:'#fff',lineHeight:1.2 }}>{hotspot.name}</div>
+                <div style={{ fontSize:11,color:'rgba(255,255,255,0.4)',marginTop:2 }}>{hotspot.region}</div>
+              </div>
+            </div>
+            <button onClick={handleClose} style={{ background:'transparent',border:'none',color:'rgba(255,255,255,0.4)',fontSize:24,cursor:'pointer',padding:0,lineHeight:1,transition:'color 0.2s' }} onMouseEnter={e=>e.currentTarget.style.color='#fff'} onMouseLeave={e=>e.currentTarget.style.color='rgba(255,255,255,0.4)'}>×</button>
+          </div>
+          {/* Severity */}
+          <div style={{ marginTop:14, display:'flex', alignItems:'center', gap:10 }}>
+            <span style={{ fontSize:11,fontWeight:700,letterSpacing:'0.08em',color:hotspot.color,background:`rgba(${r},${g},${b},0.12)`,border:`1px solid rgba(${r},${g},${b},0.3)`,padding:'3px 10px',borderRadius:100 }}>
+              {severityLabel}
+            </span>
+            <span style={{ fontSize:11,color:'rgba(255,255,255,0.35)' }}>Geopolitical Impact</span>
+          </div>
+        </div>
+
+        {/* News */}
+        <div style={{ padding:20,flex:1 }}>
+          <div style={{ fontSize:11,fontWeight:700,letterSpacing:'0.12em',textTransform:'uppercase',color:'rgba(255,255,255,0.3)',marginBottom:14 }}>
+            Market-Impacting News
+          </div>
+          {loading ? (
+            <div style={{ display:'flex',flexDirection:'column',alignItems:'center',padding:'40px 0',gap:14 }}>
+              <div style={{ width:34,height:34,borderRadius:'50%',border:`2px solid rgba(${r},${g},${b},0.15)`,borderTopColor:hotspot.color,animation:'geo-drawer-spin 0.9s linear infinite' }} />
+              <div style={{ color:'rgba(255,255,255,0.35)',fontSize:13 }}>Fetching geopolitical news…</div>
+            </div>
+          ) : news.length === 0 ? (
+            <div style={{ color:'rgba(255,255,255,0.4)',textAlign:'center',padding:'32px 0',fontSize:14 }}>No recent news found.</div>
+          ) : (
+            <div style={{ display:'flex',flexDirection:'column',gap:10 }}>
+              {news.map((item:any, i:number) => (
+                <a key={i} href={item.link} target="_blank" rel="noopener noreferrer" style={{ display:'block',padding:'14px 16px',borderRadius:14,background:'rgba(255,255,255,0.02)',border:'1px solid rgba(255,255,255,0.06)',textDecoration:'none',transition:'all 0.2s ease' }}
+                  onMouseEnter={e=>{const el=e.currentTarget as HTMLElement;el.style.background=`rgba(${r},${g},${b},0.07)`;el.style.borderColor=`rgba(${r},${g},${b},0.25)`;el.style.transform='translateY(-1px)';}}
+                  onMouseLeave={e=>{const el=e.currentTarget as HTMLElement;el.style.background='rgba(255,255,255,0.02)';el.style.borderColor='rgba(255,255,255,0.06)';el.style.transform='translateY(0)';}}>
+                  <div style={{ display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:7 }}>
+                    <span style={{ fontSize:10,fontWeight:700,letterSpacing:'0.06em',textTransform:'uppercase',borderRadius:100,padding:'2px 8px',background:item.impact==='high'?'rgba(244,63,94,0.18)':'rgba(251,146,60,0.14)',color:item.impact==='high'?'#F43F5E':'#FB923C' }}>{item.impact} impact</span>
+                    <span style={{ fontSize:11,color:'rgba(255,255,255,0.28)' }}>{item.time}</span>
+                  </div>
+                  <div style={{ fontSize:14,fontWeight:700,color:'#fff',lineHeight:1.45,marginBottom:6 }}>{item.title}</div>
+                  {item.summary && <div style={{ fontSize:12,color:'rgba(255,255,255,0.48)',lineHeight:1.5,marginBottom:8 }}>{item.summary}</div>}
+                  <div style={{ display:'flex',alignItems:'center',gap:6 }}>
+                    <div style={{ width:6,height:6,borderRadius:'50%',background:hotspot.color,flexShrink:0 }} />
+                    <span style={{ fontSize:11,fontWeight:600,color:hotspot.color }}>{item.source}</span>
+                    <span style={{ fontSize:11,color:'rgba(255,255,255,0.22)' }}>↗</span>
+                  </div>
+                </a>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+      <style>{`@keyframes geo-drawer-spin { to { transform: rotate(360deg); } }`}</style>
+    </>
+  );
+}
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function MarketsScreen() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -115,10 +276,76 @@ export default function MarketsScreen() {
   const activeRegionRef = useRef<string | null>(null);
   const hoveredRegionRef = useRef<string | null>(null);
 
+  const { symbols: watchlistSymbols } = useWatchlistStore();
+  const [selectedCompany, setSelectedCompany] = useState<any>(null);
+  const [selectedHotspot, setSelectedHotspot] = useState<GeoHotspot | null>(null);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeRegion, setActiveRegion] = useState<string | null>(null);
   const [hoveredRegion, setHoveredRegion] = useState<string | null>(null);
+  const [isNewsModalOpen, setIsNewsModalOpen] = useState(false);
+  const [fetchedNews, setFetchedNews] = useState<Record<string, any[]>>({});
+  const [isFetchingNews, setIsFetchingNews] = useState(false);
+
+  // Fetch real news when modal opens
+  useEffect(() => {
+    if (!isNewsModalOpen || !activeRegion) return;
+    if (fetchedNews[activeRegion]) return; // Already fetched
+
+    let isMounted = true;
+    const fetchNews = async () => {
+      setIsFetchingNews(true);
+      try {
+        // Build an RSS URL that searches Google News for finance/crypto/stock news regarding the region
+        const query = encodeURIComponent(`(finance OR crypto OR stock OR market) "${activeRegion}"`);
+        const rssUrl = encodeURIComponent(`https://news.google.com/rss/search?q=${query}&hl=en-US&gl=US&ceid=US:en`);
+        const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${rssUrl}`;
+        
+        const res = await fetch(apiUrl);
+        if (!res.ok) throw new Error('Failed to fetch');
+        const data = await res.json();
+        
+        if (data.status === 'ok' && data.items && isMounted) {
+          const parsedNews = data.items.slice(0, 5).map((item: any) => {
+            // Google News RSS titles usually look like: "Real Title - Source Name"
+            const parts = item.title.split(' - ');
+            const source = parts.length > 1 ? parts.pop() : 'News';
+            const title = parts.join(' - ');
+            
+            // Generate mock impact based on keywords
+            const textToSearch = (title + ' ' + item.description).toLowerCase();
+            const isHigh = ['crash', 'surge', 'rate', 'fed', 'sec', 'banned', 'record', 'plunge', 'jump', 'all-time high'].some(w => textToSearch.includes(w));
+            
+            // Format time
+            const pubDate = new Date(item.pubDate);
+            const now = new Date();
+            const diffHours = Math.floor((now.getTime() - pubDate.getTime()) / (1000 * 60 * 60));
+            const timeStr = diffHours < 1 ? 'Just now' : diffHours < 24 ? `${diffHours}h ago` : `${Math.floor(diffHours/24)}d ago`;
+
+            return {
+              title,
+              summary: item.description?.replace(/<[^>]+>/g, '').slice(0, 120) + '...', // Strip HTML
+              time: timeStr,
+              source,
+              impact: isHigh ? 'high' : 'medium',
+              link: item.link
+            };
+          });
+          
+          setFetchedNews(prev => ({ ...prev, [activeRegion]: parsedNews }));
+        }
+      } catch (err) {
+        console.error('Error fetching news:', err);
+      } finally {
+        if (isMounted) setIsFetchingNews(false);
+      }
+    };
+    
+    fetchNews();
+    
+    return () => { isMounted = false; };
+  }, [isNewsModalOpen, activeRegion, fetchedNews]);
 
   // Keep refs in sync so globe.gl callbacks always have fresh values
   useEffect(() => { activeRegionRef.current = activeRegion; }, [activeRegion]);
@@ -249,6 +476,103 @@ export default function MarketsScreen() {
 
         globe.pointOfView({ lat: 20, lng: 10, altitude: 2.4 }, 0);
 
+        // ── Watchlist markers — will be updated after init ──────────────
+        globe
+          .pointsData([])
+          .pointLat((d: any) => d.lat)
+          .pointLng((d: any) => d.lng)
+          .pointAltitude(0.01)
+          .pointRadius((d: any) => d.radius || 0.35)
+          .pointColor((d: any) => d.color)
+          .pointLabel((d: any) => `
+            <div style="
+              background:rgba(3,8,20,0.96);
+              border:1px solid ${d.color};
+              border-radius:10px;
+              padding:8px 14px;
+              font-family:Inter,sans-serif;
+              box-shadow:0 0 20px ${d.color}55;
+              min-width:130px;
+            ">
+              <div style="font-size:13px;font-weight:800;color:${d.color};margin-bottom:2px;">${d.symbol}</div>
+              <div style="font-size:11px;color:rgba(255,255,255,0.55);">${d.name}</div>
+              <div style="font-size:11px;color:rgba(255,255,255,0.35);margin-top:3px;">${d.sector}</div>
+            </div>
+          `)
+          .onPointClick((d: any) => {
+            if (d) setSelectedCompany(d);
+          })
+          .onPointHover((d: any) => {
+            if (containerRef.current) {
+              containerRef.current.style.cursor = d ? 'pointer' : 'grab';
+            }
+          });
+
+        // ── Geopolitical hotspot markers (HTML diamond elements) ──────────
+        globe
+          .htmlElementsData(GEO_HOTSPOTS)
+          .htmlLat((d: any) => d.lat)
+          .htmlLng((d: any) => d.lng)
+          .htmlAltitude(0.02)
+          .htmlElement((d: GeoHotspot) => {
+            const pulse = SEVERITY_PULSE[d.severity] || '1.5s';
+            const el = document.createElement('div');
+            el.style.cssText = `
+              position: relative;
+              cursor: pointer;
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              gap: 3px;
+              transform: translate(-50%, -50%);
+            `;
+            el.innerHTML = `
+              <style>
+                @keyframes geo-pulse-${d.id} {
+                  0%,100% { opacity:1; transform:scale(1) rotate(45deg); box-shadow: 0 0 8px ${d.color}; }
+                  50% { opacity:0.6; transform:scale(1.2) rotate(45deg); box-shadow: 0 0 20px ${d.color}; }
+                }
+                @keyframes geo-ring-${d.id} {
+                  0% { transform:scale(1) rotate(45deg); opacity:0.7; }
+                  100% { transform:scale(2.5) rotate(45deg); opacity:0; }
+                }
+              </style>
+              <div style="position:relative; width:20px; height:20px;">
+                <!-- Expanding ring -->
+                <div style="
+                  position:absolute; inset:0;
+                  border: 1.5px solid ${d.color};
+                  border-radius:2px;
+                  transform: rotate(45deg);
+                  animation: geo-ring-${d.id} ${pulse} ease-out infinite;
+                "></div>
+                <!-- Diamond body -->
+                <div style="
+                  width:14px; height:14px;
+                  background: ${d.color};
+                  transform: rotate(45deg);
+                  margin: 3px;
+                  box-shadow: 0 0 12px ${d.color};
+                  animation: geo-pulse-${d.id} ${pulse} ease-in-out infinite;
+                  border-radius:2px;
+                "></div>
+              </div>
+              <div style="
+                font-size:9px; font-weight:800;
+                color:${d.color}; letter-spacing:0.04em;
+                white-space:nowrap;
+                text-shadow: 0 0 8px ${d.color};
+                background: rgba(3,8,20,0.75);
+                padding: 1px 5px; border-radius:4px;
+              ">${d.tag}</div>
+            `;
+            el.addEventListener('click', (e) => {
+              e.stopPropagation();
+              setSelectedHotspot(d);
+            });
+            return el;
+          });
+
         globeRef.current = globe;
 
         // Resize observer
@@ -296,6 +620,22 @@ export default function MarketsScreen() {
     activeRegionRef.current = null;
     globeRef.current?.pointOfView({ lat: 20, lng: 10, altitude: 2.4 }, 1200);
   };
+
+  // ── Update globe point markers whenever watchlist changes or globe loads ──
+  useEffect(() => {
+    if (!globeRef.current || loading) return;
+    const stocks = topStocksData as any[];
+    const points = watchlistSymbols
+      .map(sym => stocks.find((s: any) => s.symbol === sym))
+      .filter(Boolean)
+      .filter((s: any) => s.lat != null && s.lng != null)
+      .map((s: any) => ({
+        ...s,
+        color: getStockColor(s.sector),
+        radius: 0.45,
+      }));
+    globeRef.current.pointsData(points);
+  }, [watchlistSymbols, loading]);
 
   // ── Render ─────────────────────────────────────────────────────────────
   return (
@@ -384,8 +724,24 @@ export default function MarketsScreen() {
           <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', marginTop: 5 }}>
             Drag to rotate · Scroll to zoom · Click a region to focus
           </div>
+          {/* Hotspot legend */}
+          <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 5 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div style={{ width: 10, height: 10, background: '#F43F5E', transform: 'rotate(45deg)', borderRadius: 1, boxShadow: '0 0 8px #F43F5E', flexShrink: 0 }} />
+              <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>Critical geopolitical event</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div style={{ width: 10, height: 10, background: '#FB923C', transform: 'rotate(45deg)', borderRadius: 1, boxShadow: '0 0 8px #FB923C', flexShrink: 0 }} />
+              <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>High-risk geopolitical event</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#A1A1AA', boxShadow: '0 0 5px #A1A1AA', flexShrink: 0 }} />
+              <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>Watchlisted company HQ</span>
+            </div>
+          </div>
         </div>
       )}
+
 
       {/* Right legend */}
       {!loading && (
@@ -490,6 +846,190 @@ export default function MarketsScreen() {
         );
       })()}
 
+      {/* News bottom bar */}
+      {!loading && activeRegion && !isNewsModalOpen && (() => {
+        const region = FINANCIAL_REGIONS.find(r => r.name === activeRegion);
+        if (!region) return null;
+        const { r, g, b } = hexToRgb(region.color);
+        return (
+          <div
+            onClick={() => setIsNewsModalOpen(true)}
+            style={{
+              position: 'absolute', bottom: 30, left: '50%',
+              transform: 'translateX(-50%)',
+              zIndex: 15, cursor: 'pointer',
+              padding: '12px 28px',
+              borderRadius: 16,
+              background: `rgba(${r},${g},${b},0.15)`,
+              border: `1px solid ${region.color}`,
+              backdropFilter: 'blur(20px)',
+              boxShadow: `0 8px 32px rgba(${r},${g},${b},0.3)`,
+              display: 'flex', alignItems: 'center', gap: 12,
+              animation: 'slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+              transition: 'all 0.2s ease',
+            }}
+            onMouseEnter={e => {
+              (e.currentTarget as HTMLElement).style.background = `rgba(${r},${g},${b},0.25)`;
+              (e.currentTarget as HTMLElement).style.transform = 'translateX(-50%) translateY(-2px)';
+            }}
+            onMouseLeave={e => {
+              (e.currentTarget as HTMLElement).style.background = `rgba(${r},${g},${b},0.15)`;
+              (e.currentTarget as HTMLElement).style.transform = 'translateX(-50%) translateY(0)';
+            }}
+          >
+            <div style={{
+              width: 10, height: 10, borderRadius: '50%',
+              background: region.color,
+              boxShadow: `0 0 12px ${region.color}`,
+              animation: 'live-pulse 2s infinite'
+            }} />
+            <span style={{ fontSize: 15, fontWeight: 700, color: '#fff' }}>
+              Most important news from <span style={{ color: region.color }}>{region.name}</span>
+            </span>
+            <span style={{ fontSize: 18, color: region.color, marginLeft: 4 }}>↑</span>
+          </div>
+        );
+      })()}
+
+      {/* News Modal */}
+      {isNewsModalOpen && activeRegion && (() => {
+        const region = FINANCIAL_REGIONS.find(r => r.name === activeRegion);
+        if (!region) return null;
+        const { r, g, b } = hexToRgb(region.color);
+        const news = fetchedNews[region.name] || REGION_NEWS[region.name] || [];
+
+        return (
+          <div style={{
+            position: 'absolute', inset: 0, zIndex: 50,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(10px)',
+            animation: 'fadeIn 0.2s ease',
+          }}>
+            <div
+              style={{
+                position: 'absolute', inset: 0, cursor: 'pointer'
+              }}
+              onClick={() => setIsNewsModalOpen(false)}
+            />
+            <div style={{
+              position: 'relative', width: '90%', maxWidth: 600, maxHeight: '80vh',
+              background: 'rgba(5,10,24,0.95)',
+              border: `1px solid rgba(${r},${g},${b},0.4)`,
+              borderRadius: 24, padding: 32,
+              boxShadow: `0 24px 64px rgba(0,0,0,0.8), 0 0 40px rgba(${r},${g},${b},0.15)`,
+              display: 'flex', flexDirection: 'column',
+              animation: 'scaleUp 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+              overflowY: 'auto'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div style={{ width: 12, height: 12, borderRadius: '50%', background: region.color, boxShadow: `0 0 16px ${region.color}` }} />
+                  <h2 style={{ margin: 0, fontSize: 24, fontWeight: 800, color: '#fff' }}>
+                    {region.name} <span style={{ color: region.color }}>Market News</span>
+                  </h2>
+                </div>
+                <button
+                  onClick={() => setIsNewsModalOpen(false)}
+                  style={{
+                    background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.5)',
+                    fontSize: 28, cursor: 'pointer', padding: 0, lineHeight: 1,
+                    transition: 'color 0.2s ease'
+                  }}
+                  onMouseEnter={e => (e.currentTarget.style.color = '#fff')}
+                  onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.5)')}
+                >
+                  ×
+                </button>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                {isFetchingNews && (!fetchedNews[region.name]) ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '40px 0', gap: 16 }}>
+                    <div style={{
+                      width: 40, height: 40, borderRadius: '50%',
+                      border: `2px solid rgba(${r},${g},${b},0.2)`,
+                      borderTopColor: region.color,
+                      animation: 'globe-spin 1s linear infinite',
+                    }} />
+                    <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13, letterSpacing: 1 }}>Fetching real-time news...</div>
+                  </div>
+                ) : news.length > 0 ? news.map((item: any, i: number) => (
+                  <a
+                    key={i}
+                    href={item.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      display: 'flex', flexDirection: 'column', gap: 8,
+                      padding: 20, borderRadius: 16,
+                      background: 'rgba(255,255,255,0.03)',
+                      border: '1px solid rgba(255,255,255,0.08)',
+
+                      textDecoration: 'none',
+                      transition: 'all 0.2s ease',
+                      cursor: 'pointer'
+                    }}
+                    onMouseEnter={e => {
+                      (e.currentTarget as HTMLElement).style.background = `rgba(${r},${g},${b},0.08)`;
+                      (e.currentTarget as HTMLElement).style.borderColor = `rgba(${r},${g},${b},0.3)`;
+                    }}
+                    onMouseLeave={e => {
+                      (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.03)';
+                      (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.08)';
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                      <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#fff', lineHeight: 1.4 }}>
+                        {item.title}
+                      </h3>
+                      <span style={{
+                        padding: '4px 10px', borderRadius: 100, fontSize: 10, fontWeight: 700, textTransform: 'uppercase',
+                        background: item.impact === 'high' ? 'rgba(244,63,94,0.2)' : 'rgba(251,146,60,0.2)',
+                        color: item.impact === 'high' ? '#F43F5E' : '#FB923C'
+                      }}>
+                        {item.impact} Impact
+                      </span>
+                    </div>
+                    <p style={{ margin: 0, fontSize: 14, color: 'rgba(255,255,255,0.6)', lineHeight: 1.5 }}>
+                      {item.summary}
+                    </p>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 4 }}>
+                      <span style={{ fontSize: 12, fontWeight: 600, color: region.color }}>{item.source}</span>
+                      <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>•</span>
+                      <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>{item.time}</span>
+                    </div>
+                  </a>
+                )) : (
+                  <div style={{ color: 'rgba(255,255,255,0.5)', textAlign: 'center', padding: '20px 0' }}>
+                    No recent news found.
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* Company News Drawer (from globe marker click) */}
+      {selectedCompany && (
+        <CompanyNewsDrawer
+          symbol={selectedCompany.symbol}
+          name={selectedCompany.name}
+          sector={selectedCompany.sector}
+          price={selectedCompany.price}
+          change24h={selectedCompany.change24h}
+          onClose={() => setSelectedCompany(null)}
+        />
+      )}
+
+      {/* Geopolitical News Drawer (from hotspot diamond click) */}
+      {selectedHotspot && (
+        <GeoNewsDrawer
+          hotspot={selectedHotspot}
+          onClose={() => setSelectedHotspot(null)}
+        />
+      )}
+
       {/* CSS animations */}
       <style>{`
         @keyframes star-twinkle {
@@ -503,7 +1043,20 @@ export default function MarketsScreen() {
           0%, 100% { box-shadow: 0 0 6px #00D4FF; opacity: 1; }
           50%       { box-shadow: 0 0 14px #00D4FF; opacity: 0.6; }
         }
+        @keyframes slideUp {
+          from { opacity: 0; transform: translate(-50%, 20px); }
+          to { opacity: 1; transform: translate(-50%, 0); }
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes scaleUp {
+          from { opacity: 0; transform: scale(0.95); }
+          to { opacity: 1; transform: scale(1); }
+        }
       `}</style>
+
     </div>
   );
 }
