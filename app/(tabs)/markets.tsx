@@ -474,6 +474,15 @@ export default function MarketsScreen() {
         controls.dampingFactor   = 0.08;
         controls.enablePan       = false;
 
+        // Stop auto-rotation on first user interaction with the globe
+        const stopSpin = () => {
+          if (controls.autoRotate) controls.autoRotate = false;
+        };
+        el.addEventListener('mousedown', stopSpin, { once: false });
+        el.addEventListener('touchstart', stopSpin, { once: false, passive: true });
+        // Store for cleanup
+        globe._stopSpin = stopSpin;
+
         globe.pointOfView({ lat: 20, lng: 10, altitude: 2.4 }, 0);
 
         // ── Watchlist markers — will be updated after init ──────────────
@@ -516,61 +525,69 @@ export default function MarketsScreen() {
           .htmlAltitude(0.02)
           .htmlElement((d: GeoHotspot) => {
             const pulse = SEVERITY_PULSE[d.severity] || '1.5s';
-            const el = document.createElement('div');
-            el.style.cssText = `
-              position: relative;
-              cursor: pointer;
-              display: flex;
-              flex-direction: column;
-              align-items: center;
-              gap: 3px;
-              transform: translate(-50%, -50%);
-            `;
-            el.innerHTML = `
+            const severityColor = d.severity === 'critical' ? '#F43F5E' : d.severity === 'high' ? '#FB923C' : '#FFB800';
+            const severityText = d.severity === 'critical' ? '🔴 CRITICAL' : d.severity === 'high' ? '🟠 HIGH RISK' : '🟡 MEDIUM';
+
+            const wrapper = document.createElement('div');
+            wrapper.style.cssText = 'position:relative;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;';
+
+            wrapper.innerHTML = `
               <style>
-                @keyframes geo-pulse-${d.id} {
-                  0%,100% { opacity:1; transform:scale(1) rotate(45deg); box-shadow: 0 0 8px ${d.color}; }
-                  50% { opacity:0.6; transform:scale(1.2) rotate(45deg); box-shadow: 0 0 20px ${d.color}; }
+                @keyframes gp-${d.id} {
+                  0%,100%{opacity:1;transform:scale(1) rotate(45deg);box-shadow:0 0 8px ${d.color};}
+                  50%{opacity:0.6;transform:scale(1.25) rotate(45deg);box-shadow:0 0 22px ${d.color};}
                 }
-                @keyframes geo-ring-${d.id} {
-                  0% { transform:scale(1) rotate(45deg); opacity:0.7; }
-                  100% { transform:scale(2.5) rotate(45deg); opacity:0; }
+                @keyframes gpr-${d.id} {
+                  0%{transform:scale(1) rotate(45deg);opacity:0.65;}
+                  100%{transform:scale(2.6) rotate(45deg);opacity:0;}
                 }
               </style>
-              <div style="position:relative; width:20px; height:20px;">
-                <!-- Expanding ring -->
-                <div style="
-                  position:absolute; inset:0;
-                  border: 1.5px solid ${d.color};
-                  border-radius:2px;
-                  transform: rotate(45deg);
-                  animation: geo-ring-${d.id} ${pulse} ease-out infinite;
-                "></div>
-                <!-- Diamond body -->
-                <div style="
-                  width:14px; height:14px;
-                  background: ${d.color};
-                  transform: rotate(45deg);
-                  margin: 3px;
-                  box-shadow: 0 0 12px ${d.color};
-                  animation: geo-pulse-${d.id} ${pulse} ease-in-out infinite;
-                  border-radius:2px;
-                "></div>
+              <!-- Marker -->
+              <div class="geo-marker-${d.id}" style="position:relative;width:22px;height:22px;">
+                <div style="position:absolute;inset:0;border:1.5px solid ${d.color};border-radius:2px;transform:rotate(45deg);animation:gpr-${d.id} ${pulse} ease-out infinite;"></div>
+                <div style="width:14px;height:14px;background:${d.color};transform:rotate(45deg);margin:4px;box-shadow:0 0 14px ${d.color};animation:gp-${d.id} ${pulse} ease-in-out infinite;border-radius:2px;"></div>
               </div>
-              <div style="
-                font-size:9px; font-weight:800;
-                color:${d.color}; letter-spacing:0.04em;
-                white-space:nowrap;
-                text-shadow: 0 0 8px ${d.color};
-                background: rgba(3,8,20,0.75);
-                padding: 1px 5px; border-radius:4px;
-              ">${d.tag}</div>
+              <div style="font-size:9px;font-weight:800;color:${d.color};letter-spacing:0.04em;white-space:nowrap;text-shadow:0 0 8px ${d.color};background:rgba(3,8,20,0.75);padding:1px 5px;border-radius:4px;">${d.tag}</div>
+              <!-- Hover tooltip -->
+              <div class="geo-tooltip-${d.id}" style="
+                display:none;
+                position:absolute;
+                bottom:calc(100% + 10px);
+                left:50%;
+                transform:translateX(-50%);
+                width:220px;
+                background:rgba(5,9,22,0.97);
+                border:1px solid ${d.color}44;
+                border-radius:14px;
+                padding:14px;
+                box-shadow:0 8px 40px rgba(0,0,0,0.8),0 0 20px ${d.color}22;
+                backdrop-filter:blur(20px);
+                pointer-events:none;
+                z-index:500;
+              ">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                  <div style="width:10px;height:10px;background:${d.color};transform:rotate(45deg);border-radius:1px;flex-shrink:0;"></div>
+                  <div style="font-size:12px;font-weight:800;color:#fff;line-height:1.2;">${d.name}</div>
+                </div>
+                <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;">
+                  <span style="font-size:9px;font-weight:700;letter-spacing:0.07em;color:${severityColor};background:${severityColor}18;border:1px solid ${severityColor}33;padding:2px 7px;border-radius:100px;">${severityText}</span>
+                  <span style="font-size:9px;color:rgba(255,255,255,0.35);">${d.region}</span>
+                </div>
+                <div style="font-size:10px;color:rgba(255,255,255,0.45);line-height:1.5;border-top:1px solid rgba(255,255,255,0.06);padding-top:8px;">
+                  Click to see live market-impacting news for this region
+                </div>
+              </div>
             `;
-            el.addEventListener('click', (e) => {
+
+            // Show/hide tooltip on hover
+            const tooltip = wrapper.querySelector(`.geo-tooltip-${d.id}`) as HTMLElement;
+            wrapper.addEventListener('mouseenter', () => { if (tooltip) tooltip.style.display = 'block'; });
+            wrapper.addEventListener('mouseleave', () => { if (tooltip) tooltip.style.display = 'none'; });
+            wrapper.addEventListener('click', (e) => {
               e.stopPropagation();
               setSelectedHotspot(d);
             });
-            return el;
+            return wrapper;
           });
 
         globeRef.current = globe;
@@ -598,6 +615,14 @@ export default function MarketsScreen() {
       destroyed = true;
       if (globe) {
         globe._ro?.disconnect();
+        // Remove stopSpin listeners if they were added
+        if (globe._stopSpin) {
+          const elRef = containerRef.current;
+          if (elRef) {
+            elRef.removeEventListener('mousedown', globe._stopSpin);
+            elRef.removeEventListener('touchstart', globe._stopSpin);
+          }
+        }
         globe._destructor?.();
       }
     };

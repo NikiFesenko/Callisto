@@ -36,12 +36,12 @@ export default function PortfolioScreen() {
   const { symbols } = useWatchlistStore();
   const [isWatchlistModalOpen, setIsWatchlistModalOpen] = useState(false);
   
-  // Real-time prices from Yahoo Finance via Vite proxy
-  const liveQuotes = useStockPrices(mounted ? symbols : []);
-  
-  // Need to handle hydration mismatch for local storage Zustand
+  // Must be declared BEFORE useStockPrices (which consumes it)
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
+
+  // Real-time prices from Yahoo Finance via Vite proxy
+  const liveQuotes = useStockPrices(mounted ? symbols : []);
 
   const activeAutomations = (automations || []).filter(a => a.walletAddress === publicKey && a.enabled);
   const totalValue = MOCK_TOKENS.reduce((sum, t) => sum + t.usdValue, 0);
