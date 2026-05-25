@@ -269,6 +269,187 @@ function GeoNewsDrawer({ hotspot, onClose }: { hotspot: GeoHotspot; onClose: () 
   );
 }
 
+// ─── News of the Day Widget ───────────────────────────────────────────────────
+const NEWS_OF_DAY_QUERY = 'geopolitical OR "stock market" OR "Fed rate" OR "oil price" OR "war" OR "sanctions" when:1d';
+
+function NewsOfDay() {
+  const [headlines, setHeadlines] = React.useState<any[]>([]);
+  const [activeIdx, setActiveIdx] = React.useState(0);
+  const [loading, setLoading] = React.useState(true);
+  const [expanded, setExpanded] = React.useState(false);
+  const timerRef = React.useRef<any>(null);
+
+  React.useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const q = encodeURIComponent(NEWS_OF_DAY_QUERY);
+        const rssUrl = encodeURIComponent(`https://news.google.com/rss/search?q=${q}&hl=en-US&gl=US&ceid=US:en`);
+        const res = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${rssUrl}&count=8`);
+        const data = await res.json();
+        if (data.status === 'ok' && data.items?.length && alive) {
+          const HIGH = ['war','attack','sanction','rate cut','rate hike','crash','plunge','surge','ceasefire','fed','invasion','nuclear'];
+          const parsed = data.items.slice(0, 6).map((item: any) => {
+            const parts = item.title.split(' - ');
+            const source = parts.length > 1 ? parts.pop()!.trim() : 'News';
+            const title = parts.join(' - ').trim();
+            const text = title.toLowerCase();
+            const isBreaking = HIGH.some(w => text.includes(w));
+            const pubDate = new Date(item.pubDate);
+            const diffH = Math.floor((Date.now() - pubDate.getTime()) / 3_600_000);
+            const timeStr = diffH < 1 ? 'Just now' : diffH < 24 ? `${diffH}h ago` : `${Math.floor(diffH/24)}d ago`;
+            return { title, source, timeStr, isBreaking, link: item.link };
+          });
+          setHeadlines(parsed);
+        }
+      } catch (_) {}
+      finally { if (alive) setLoading(false); }
+    })();
+    return () => { alive = false; };
+  }, []);
+
+  // Auto-cycle through headlines
+  React.useEffect(() => {
+    if (!headlines.length || expanded) return;
+    timerRef.current = setInterval(() => {
+      setActiveIdx(i => (i + 1) % headlines.length);
+    }, 6000);
+    return () => clearInterval(timerRef.current);
+  }, [headlines.length, expanded]);
+
+  const today = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  const active = headlines[activeIdx];
+
+  if (loading) return null; // don't show skeleton on globe
+
+  return (
+    <div
+      style={{
+        position: 'absolute', bottom: 28, left: 28, zIndex: 20,
+        maxWidth: expanded ? 380 : 320,
+        transition: 'max-width 0.35s cubic-bezier(0.16,1,0.3,1)',
+      }}
+    >
+      {/* Main card */}
+      <div
+        style={{
+          background: 'rgba(5,9,22,0.92)',
+          border: '1px solid rgba(255,255,255,0.08)',
+          borderRadius: 16,
+          backdropFilter: 'blur(24px)',
+          WebkitBackdropFilter: 'blur(24px)',
+          boxShadow: '0 8px 40px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.03)',
+          overflow: 'hidden',
+        }}
+      >
+        {/* Header */}
+        <div
+          style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            padding: '10px 14px 8px',
+            borderBottom: '1px solid rgba(255,255,255,0.06)',
+            cursor: 'pointer',
+          }}
+          onClick={() => setExpanded(e => !e)}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            {/* Pulsing dot */}
+            <div style={{
+              width: 7, height: 7, borderRadius: '50%',
+              background: '#F43F5E', boxShadow: '0 0 8px #F43F5E',
+              animation: 'live-pulse 1.5s ease-in-out infinite',
+              flexShrink: 0,
+            }} />
+            <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.7)' }}>
+              News of the Day
+            </span>
+            <span style={{
+              fontSize: 9, fontWeight: 700, letterSpacing: '0.06em',
+              color: '#FFB800', background: 'rgba(255,184,0,0.12)',
+              border: '1px solid rgba(255,184,0,0.25)',
+              padding: '1px 6px', borderRadius: 100,
+            }}>{today}</span>
+          </div>
+          <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.25)', userSelect: 'none' }}>
+            {expanded ? '▼' : '▲'}
+          </span>
+        </div>
+
+        {/* Active headline (always visible) */}
+        {active && (
+          <a
+            href={active.link} target="_blank" rel="noopener noreferrer"
+            style={{ display: 'block', padding: '10px 14px', textDecoration: 'none' }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+              {active.isBreaking && (
+                <span style={{
+                  fontSize: 9, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase',
+                  color: '#F43F5E', background: 'rgba(244,63,94,0.12)',
+                  border: '1px solid rgba(244,63,94,0.25)', padding: '1px 6px', borderRadius: 100,
+                }}>⚡ Breaking</span>
+              )}
+              <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', marginLeft: 'auto' }}>{active.timeStr}</span>
+            </div>
+            <div style={{
+              fontSize: 12, fontWeight: 700, color: '#fff',
+              lineHeight: 1.45, marginBottom: 5,
+            }}>{active.title}</div>
+            <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', display: 'flex', alignItems: 'center', gap: 4 }}>
+              <span>{active.source}</span>
+              <span style={{ color: 'rgba(255,255,255,0.15)' }}>↗</span>
+            </div>
+          </a>
+        )}
+
+        {/* Expanded: show all headlines */}
+        {expanded && headlines.length > 1 && (
+          <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+            {headlines.map((h: any, i: number) => i === activeIdx ? null : (
+              <a
+                key={i} href={h.link} target="_blank" rel="noopener noreferrer"
+                style={{
+                  display: 'flex', gap: 10, padding: '8px 14px',
+                  borderBottom: i < headlines.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
+                  textDecoration: 'none', cursor: 'pointer', transition: 'background 0.15s',
+                }}
+                onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.03)'}
+                onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}
+              >
+                {h.isBreaking && (
+                  <span style={{ fontSize: 9, color: '#F43F5E', flexShrink: 0, lineHeight: 1.5, marginTop: 1 }}>⚡</span>
+                )}
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.75)', lineHeight: 1.4, marginBottom: 2 }}>{h.title}</div>
+                  <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)' }}>{h.source} · {h.timeStr}</div>
+                </div>
+              </a>
+            ))}
+          </div>
+        )}
+
+        {/* Dot navigation */}
+        {headlines.length > 1 && !expanded && (
+          <div style={{ display: 'flex', justifyContent: 'center', gap: 5, padding: '6px 14px 10px' }}>
+            {headlines.map((_: any, i: number) => (
+              <div
+                key={i}
+                onClick={() => { setActiveIdx(i); clearInterval(timerRef.current); }}
+                style={{
+                  width: i === activeIdx ? 16 : 5, height: 5, borderRadius: 100,
+                  background: i === activeIdx ? '#F43F5E' : 'rgba(255,255,255,0.15)',
+                  cursor: 'pointer', transition: 'all 0.3s ease',
+                  boxShadow: i === activeIdx ? '0 0 8px #F43F5E' : 'none',
+                }}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function MarketsScreen() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -555,7 +736,7 @@ export default function MarketsScreen() {
                 bottom:calc(100% + 10px);
                 left:50%;
                 transform:translateX(-50%);
-                width:220px;
+                width:260px;
                 background:rgba(5,9,22,0.97);
                 border:1px solid ${d.color}44;
                 border-radius:14px;
@@ -573,20 +754,50 @@ export default function MarketsScreen() {
                   <span style="font-size:9px;font-weight:700;letter-spacing:0.07em;color:${severityColor};background:${severityColor}18;border:1px solid ${severityColor}33;padding:2px 7px;border-radius:100px;">${severityText}</span>
                   <span style="font-size:9px;color:rgba(255,255,255,0.35);">${d.region}</span>
                 </div>
-                <div style="font-size:10px;color:rgba(255,255,255,0.45);line-height:1.5;border-top:1px solid rgba(255,255,255,0.06);padding-top:8px;">
-                  Click to see live market-impacting news for this region
+                <!-- Live headline slot -->
+                <div class="geo-headline-${d.id}" style="font-size:10px;color:rgba(255,255,255,0.45);line-height:1.5;border-top:1px solid rgba(255,255,255,0.06);padding-top:8px;">
+                  <span class="geo-hl-loading-${d.id}" style="color:rgba(255,255,255,0.25);font-style:italic;">Loading latest headline…</span>
                 </div>
               </div>
             `;
 
             // Show/hide tooltip on hover
             const tooltip = wrapper.querySelector(`.geo-tooltip-${d.id}`) as HTMLElement;
+            const headlineSlot = wrapper.querySelector(`.geo-headline-${d.id}`) as HTMLElement;
             wrapper.addEventListener('mouseenter', () => { if (tooltip) tooltip.style.display = 'block'; });
             wrapper.addEventListener('mouseleave', () => { if (tooltip) tooltip.style.display = 'none'; });
             wrapper.addEventListener('click', (e) => {
               e.stopPropagation();
               setSelectedHotspot(d);
             });
+
+            // Async: fetch the top headline for this hotspot and inject it into the tooltip
+            ;(async () => {
+              try {
+                const q = encodeURIComponent(d.newsQuery);
+                const rssUrl = encodeURIComponent(`https://news.google.com/rss/search?q=${q}&hl=en-US&gl=US&ceid=US:en`);
+                const res = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${rssUrl}&api_key=&count=3`);
+                const data = await res.json();
+                if (data.status === 'ok' && data.items?.length && headlineSlot) {
+                  const item = data.items[0];
+                  const parts = item.title.split(' - ');
+                  const source = parts.length > 1 ? parts.pop().trim() : '';
+                  const title = parts.join(' - ').trim();
+                  const pubDate = new Date(item.pubDate);
+                  const diffH = Math.floor((Date.now() - pubDate.getTime()) / 3_600_000);
+                  const timeStr = diffH < 1 ? 'Just now' : diffH < 24 ? `${diffH}h ago` : `${Math.floor(diffH/24)}d ago`;
+                  headlineSlot.innerHTML = `
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
+                      <span style="font-size:9px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:rgba(255,255,255,0.3);">${source}</span>
+                      <span style="font-size:9px;color:rgba(255,255,255,0.2);">${timeStr}</span>
+                    </div>
+                    <div style="font-size:11px;font-weight:600;color:rgba(255,255,255,0.85);line-height:1.45;margin-bottom:6px;">${title}</div>
+                    <div style="font-size:9px;color:${d.color};font-weight:600;">Click to see all news →</div>
+                  `;
+                }
+              } catch(_) {}
+            })();
+
             return wrapper;
           });
 
@@ -844,6 +1055,9 @@ export default function MarketsScreen() {
           )}
         </div>
       )}
+
+      {/* News of the Day — bottom-left persistent widget */}
+      {!loading && <NewsOfDay />}
 
       {/* Bottom hover badge */}
       {!loading && hoveredRegion && (() => {
