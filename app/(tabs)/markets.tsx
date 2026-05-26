@@ -270,12 +270,11 @@ function GeoNewsDrawer({ hotspot, onClose }: { hotspot: GeoHotspot; onClose: () 
 }
 
 // ─── News of the Day Widget ───────────────────────────────────────────────────
-const NEWS_OF_DAY_QUERY = 'geopolitical OR "stock market" OR "Fed rate" OR "oil price" OR "war" OR "sanctions" when:1d';
-
 function NewsOfDay() {
   const [headlines, setHeadlines] = React.useState<any[]>([]);
   const [activeIdx, setActiveIdx] = React.useState(0);
   const [loading, setLoading] = React.useState(true);
+  const [fetchError, setFetchError] = React.useState(false);
   const [expanded, setExpanded] = React.useState(false);
   const timerRef = React.useRef<any>(null);
 
@@ -283,167 +282,127 @@ function NewsOfDay() {
     let alive = true;
     (async () => {
       try {
-        const q = encodeURIComponent(NEWS_OF_DAY_QUERY);
-        const rssUrl = encodeURIComponent(`https://news.google.com/rss/search?q=${q}&hl=en-US&gl=US&ceid=US:en`);
-        const res = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${rssUrl}&count=8`);
+        // Simplified query that Google News RSS supports
+        const query = 'stock market OR geopolitical OR oil price OR Fed OR war OR sanctions';
+        const rssUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=en-US&gl=US&ceid=US:en`;
+        const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssUrl)}`;
+        const res = await fetch(apiUrl);
+        if (!res.ok) throw new Error('HTTP ' + res.status);
         const data = await res.json();
-        if (data.status === 'ok' && data.items?.length && alive) {
-          const HIGH = ['war','attack','sanction','rate cut','rate hike','crash','plunge','surge','ceasefire','fed','invasion','nuclear'];
+        if (!alive) return;
+        if (data.status === 'ok' && Array.isArray(data.items) && data.items.length) {
+          const HIGH = ['war','attack','sanction','rate cut','rate hike','crash','plunge','surge','ceasefire','fed','invasion','nuclear','missiles','tariff'];
           const parsed = data.items.slice(0, 6).map((item: any) => {
-            const parts = item.title.split(' - ');
+            const parts = (item.title || '').split(' - ');
             const source = parts.length > 1 ? parts.pop()!.trim() : 'News';
             const title = parts.join(' - ').trim();
-            const text = title.toLowerCase();
-            const isBreaking = HIGH.some(w => text.includes(w));
+            const isBreaking = HIGH.some(w => title.toLowerCase().includes(w));
             const pubDate = new Date(item.pubDate);
             const diffH = Math.floor((Date.now() - pubDate.getTime()) / 3_600_000);
-            const timeStr = diffH < 1 ? 'Just now' : diffH < 24 ? `${diffH}h ago` : `${Math.floor(diffH/24)}d ago`;
+            const timeStr = diffH < 1 ? 'Just now' : diffH < 24 ? `${diffH}h ago` : `${Math.floor(diffH / 24)}d ago`;
             return { title, source, timeStr, isBreaking, link: item.link };
           });
           setHeadlines(parsed);
+        } else {
+          setFetchError(true);
         }
-      } catch (_) {}
-      finally { if (alive) setLoading(false); }
+      } catch (_) {
+        if (alive) setFetchError(true);
+      } finally {
+        if (alive) setLoading(false);
+      }
     })();
     return () => { alive = false; };
   }, []);
 
-  // Auto-cycle through headlines
+  // Auto-cycle
   React.useEffect(() => {
     if (!headlines.length || expanded) return;
-    timerRef.current = setInterval(() => {
-      setActiveIdx(i => (i + 1) % headlines.length);
-    }, 6000);
+    timerRef.current = setInterval(() => setActiveIdx(i => (i + 1) % headlines.length), 6000);
     return () => clearInterval(timerRef.current);
   }, [headlines.length, expanded]);
 
   const today = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   const active = headlines[activeIdx];
 
-  if (loading) return null; // don't show skeleton on globe
-
   return (
-    <div
-      style={{
-        position: 'absolute', bottom: 28, left: 28, zIndex: 20,
-        maxWidth: expanded ? 380 : 320,
-        transition: 'max-width 0.35s cubic-bezier(0.16,1,0.3,1)',
-      }}
-    >
-      {/* Main card */}
-      <div
-        style={{
-          background: 'rgba(5,9,22,0.92)',
-          border: '1px solid rgba(255,255,255,0.08)',
-          borderRadius: 16,
-          backdropFilter: 'blur(24px)',
-          WebkitBackdropFilter: 'blur(24px)',
-          boxShadow: '0 8px 40px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.03)',
-          overflow: 'hidden',
-        }}
-      >
-        {/* Header */}
+    <div style={{ position: 'absolute', bottom: 28, left: 28, zIndex: 20, width: expanded ? 380 : 320, transition: 'width 0.35s cubic-bezier(0.16,1,0.3,1)' }}>
+      <div style={{ background: 'rgba(5,9,22,0.94)', border: '1px solid rgba(255,255,255,0.09)', borderRadius: 16, backdropFilter: 'blur(28px)', WebkitBackdropFilter: 'blur(28px)', boxShadow: '0 8px 40px rgba(0,0,0,0.75)', overflow: 'hidden' }}>
+
+        {/* Header — always clickable */}
         <div
-          style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            padding: '10px 14px 8px',
-            borderBottom: '1px solid rgba(255,255,255,0.06)',
-            cursor: 'pointer',
-          }}
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px 9px', borderBottom: '1px solid rgba(255,255,255,0.06)', cursor: 'pointer', userSelect: 'none' }}
           onClick={() => setExpanded(e => !e)}
+          onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.02)'}
+          onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            {/* Pulsing dot */}
-            <div style={{
-              width: 7, height: 7, borderRadius: '50%',
-              background: '#F43F5E', boxShadow: '0 0 8px #F43F5E',
-              animation: 'live-pulse 1.5s ease-in-out infinite',
-              flexShrink: 0,
-            }} />
-            <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.7)' }}>
-              News of the Day
-            </span>
-            <span style={{
-              fontSize: 9, fontWeight: 700, letterSpacing: '0.06em',
-              color: '#FFB800', background: 'rgba(255,184,0,0.12)',
-              border: '1px solid rgba(255,184,0,0.25)',
-              padding: '1px 6px', borderRadius: 100,
-            }}>{today}</span>
+            <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#F43F5E', boxShadow: '0 0 8px #F43F5E', animation: 'live-pulse 1.5s ease-in-out infinite', flexShrink: 0 }} />
+            <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.75)' }}>News of the Day</span>
+            <span style={{ fontSize: 9, fontWeight: 700, color: '#FFB800', background: 'rgba(255,184,0,0.12)', border: '1px solid rgba(255,184,0,0.25)', padding: '1px 7px', borderRadius: 100 }}>{today}</span>
           </div>
-          <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.25)', userSelect: 'none' }}>
-            {expanded ? '▼' : '▲'}
-          </span>
+          <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>{expanded ? '▼' : '▲'}</span>
         </div>
 
-        {/* Active headline (always visible) */}
-        {active && (
-          <a
-            href={active.link} target="_blank" rel="noopener noreferrer"
-            style={{ display: 'block', padding: '10px 14px', textDecoration: 'none' }}
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-              {active.isBreaking && (
-                <span style={{
-                  fontSize: 9, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase',
-                  color: '#F43F5E', background: 'rgba(244,63,94,0.12)',
-                  border: '1px solid rgba(244,63,94,0.25)', padding: '1px 6px', borderRadius: 100,
-                }}>⚡ Breaking</span>
-              )}
-              <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', marginLeft: 'auto' }}>{active.timeStr}</span>
-            </div>
-            <div style={{
-              fontSize: 12, fontWeight: 700, color: '#fff',
-              lineHeight: 1.45, marginBottom: 5,
-            }}>{active.title}</div>
-            <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', display: 'flex', alignItems: 'center', gap: 4 }}>
-              <span>{active.source}</span>
-              <span style={{ color: 'rgba(255,255,255,0.15)' }}>↗</span>
-            </div>
-          </a>
-        )}
-
-        {/* Expanded: show all headlines */}
-        {expanded && headlines.length > 1 && (
-          <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-            {headlines.map((h: any, i: number) => i === activeIdx ? null : (
-              <a
-                key={i} href={h.link} target="_blank" rel="noopener noreferrer"
-                style={{
-                  display: 'flex', gap: 10, padding: '8px 14px',
-                  borderBottom: i < headlines.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
-                  textDecoration: 'none', cursor: 'pointer', transition: 'background 0.15s',
-                }}
-                onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.03)'}
-                onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}
-              >
-                {h.isBreaking && (
-                  <span style={{ fontSize: 9, color: '#F43F5E', flexShrink: 0, lineHeight: 1.5, marginTop: 1 }}>⚡</span>
-                )}
-                <div>
-                  <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.75)', lineHeight: 1.4, marginBottom: 2 }}>{h.title}</div>
-                  <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)' }}>{h.source} · {h.timeStr}</div>
+        {/* Body */}
+        {loading ? (
+          <div style={{ padding: '14px', display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ width: 16, height: 16, borderRadius: '50%', border: '2px solid rgba(244,63,94,0.15)', borderTopColor: '#F43F5E', animation: 'geo-drawer-spin 0.8s linear infinite', flexShrink: 0 }} />
+            <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>Loading headlines…</span>
+          </div>
+        ) : fetchError || !headlines.length ? (
+          <div style={{ padding: '14px', fontSize: 11, color: 'rgba(255,255,255,0.3)', fontStyle: 'italic' }}>Could not load headlines. Check connection.</div>
+        ) : (
+          <>
+            {/* Active headline */}
+            {active && (
+              <a href={active.link} target="_blank" rel="noopener noreferrer" style={{ display: 'block', padding: '11px 14px 8px', textDecoration: 'none' }}
+                onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.025)'}
+                onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 }}>
+                  {active.isBreaking
+                    ? <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.07em', textTransform: 'uppercase', color: '#F43F5E', background: 'rgba(244,63,94,0.12)', border: '1px solid rgba(244,63,94,0.25)', padding: '1px 7px', borderRadius: 100 }}>⚡ Breaking</span>
+                    : <span />}
+                  <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', marginLeft: 'auto' }}>{active.timeStr}</span>
+                </div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: '#fff', lineHeight: 1.5, marginBottom: 6 }}>{active.title}</div>
+                <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', display: 'flex', alignItems: 'center', gap: 5 }}>
+                  <span>{active.source}</span>
+                  <span style={{ color: 'rgba(255,255,255,0.2)' }}>↗</span>
                 </div>
               </a>
-            ))}
-          </div>
-        )}
+            )}
 
-        {/* Dot navigation */}
-        {headlines.length > 1 && !expanded && (
-          <div style={{ display: 'flex', justifyContent: 'center', gap: 5, padding: '6px 14px 10px' }}>
-            {headlines.map((_: any, i: number) => (
-              <div
-                key={i}
-                onClick={() => { setActiveIdx(i); clearInterval(timerRef.current); }}
-                style={{
-                  width: i === activeIdx ? 16 : 5, height: 5, borderRadius: 100,
-                  background: i === activeIdx ? '#F43F5E' : 'rgba(255,255,255,0.15)',
-                  cursor: 'pointer', transition: 'all 0.3s ease',
-                  boxShadow: i === activeIdx ? '0 0 8px #F43F5E' : 'none',
-                }}
-              />
-            ))}
-          </div>
+            {/* Expanded list */}
+            {expanded && headlines.length > 1 && (
+              <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                {headlines.map((h: any, i: number) => i === activeIdx ? null : (
+                  <a key={i} href={h.link} target="_blank" rel="noopener noreferrer"
+                    style={{ display: 'flex', gap: 8, padding: '8px 14px', borderBottom: '1px solid rgba(255,255,255,0.04)', textDecoration: 'none', transition: 'background 0.15s' }}
+                    onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.03)'}
+                    onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}>
+                    {h.isBreaking && <span style={{ fontSize: 9, color: '#F43F5E', flexShrink: 0, marginTop: 2 }}>⚡</span>}
+                    <div>
+                      <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.78)', lineHeight: 1.4, marginBottom: 2 }}>{h.title}</div>
+                      <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)' }}>{h.source} · {h.timeStr}</div>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            )}
+
+            {/* Dot navigation */}
+            {headlines.length > 1 && !expanded && (
+              <div style={{ display: 'flex', justifyContent: 'center', gap: 5, padding: '7px 14px 11px' }}>
+                {headlines.map((_: any, i: number) => (
+                  <div key={i}
+                    onClick={(e) => { e.stopPropagation(); setActiveIdx(i); clearInterval(timerRef.current); }}
+                    style={{ width: i === activeIdx ? 16 : 5, height: 5, borderRadius: 100, background: i === activeIdx ? '#F43F5E' : 'rgba(255,255,255,0.18)', cursor: 'pointer', transition: 'all 0.3s ease', boxShadow: i === activeIdx ? '0 0 8px #F43F5E' : 'none' }}
+                  />
+                ))}
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>
@@ -460,6 +419,11 @@ export default function MarketsScreen() {
   const { symbols: watchlistSymbols } = useWatchlistStore();
   const [selectedCompany, setSelectedCompany] = useState<any>(null);
   const [selectedHotspot, setSelectedHotspot] = useState<GeoHotspot | null>(null);
+
+  // Hover tooltip state — React overlay (avoids globe.gl overflow:hidden clipping)
+  const [hoveredHotspot, setHoveredHotspot] = useState<GeoHotspot | null>(null);
+  const [tooltipPos, setTooltipPos] = useState<{x: number; y: number} | null>(null);
+  const [hotspotHeadlines, setHotspotHeadlines] = useState<Record<string, {title: string; source: string; timeStr: string; link: string} | null>>({});
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -706,11 +670,9 @@ export default function MarketsScreen() {
           .htmlAltitude(0.02)
           .htmlElement((d: GeoHotspot) => {
             const pulse = SEVERITY_PULSE[d.severity] || '1.5s';
-            const severityColor = d.severity === 'critical' ? '#F43F5E' : d.severity === 'high' ? '#FB923C' : '#FFB800';
-            const severityText = d.severity === 'critical' ? '🔴 CRITICAL' : d.severity === 'high' ? '🟠 HIGH RISK' : '🟡 MEDIUM';
 
             const wrapper = document.createElement('div');
-            wrapper.style.cssText = 'position:relative;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;';
+            wrapper.style.cssText = 'cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;';
 
             wrapper.innerHTML = `
               <style>
@@ -723,77 +685,47 @@ export default function MarketsScreen() {
                   100%{transform:scale(2.6) rotate(45deg);opacity:0;}
                 }
               </style>
-              <!-- Marker -->
-              <div class="geo-marker-${d.id}" style="position:relative;width:22px;height:22px;">
+              <div style="position:relative;width:22px;height:22px;">
                 <div style="position:absolute;inset:0;border:1.5px solid ${d.color};border-radius:2px;transform:rotate(45deg);animation:gpr-${d.id} ${pulse} ease-out infinite;"></div>
                 <div style="width:14px;height:14px;background:${d.color};transform:rotate(45deg);margin:4px;box-shadow:0 0 14px ${d.color};animation:gp-${d.id} ${pulse} ease-in-out infinite;border-radius:2px;"></div>
               </div>
               <div style="font-size:9px;font-weight:800;color:${d.color};letter-spacing:0.04em;white-space:nowrap;text-shadow:0 0 8px ${d.color};background:rgba(3,8,20,0.75);padding:1px 5px;border-radius:4px;">${d.tag}</div>
-              <!-- Hover tooltip -->
-              <div class="geo-tooltip-${d.id}" style="
-                display:none;
-                position:absolute;
-                bottom:calc(100% + 10px);
-                left:50%;
-                transform:translateX(-50%);
-                width:260px;
-                background:rgba(5,9,22,0.97);
-                border:1px solid ${d.color}44;
-                border-radius:14px;
-                padding:14px;
-                box-shadow:0 8px 40px rgba(0,0,0,0.8),0 0 20px ${d.color}22;
-                backdrop-filter:blur(20px);
-                pointer-events:none;
-                z-index:500;
-              ">
-                <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-                  <div style="width:10px;height:10px;background:${d.color};transform:rotate(45deg);border-radius:1px;flex-shrink:0;"></div>
-                  <div style="font-size:12px;font-weight:800;color:#fff;line-height:1.2;">${d.name}</div>
-                </div>
-                <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;">
-                  <span style="font-size:9px;font-weight:700;letter-spacing:0.07em;color:${severityColor};background:${severityColor}18;border:1px solid ${severityColor}33;padding:2px 7px;border-radius:100px;">${severityText}</span>
-                  <span style="font-size:9px;color:rgba(255,255,255,0.35);">${d.region}</span>
-                </div>
-                <!-- Live headline slot -->
-                <div class="geo-headline-${d.id}" style="font-size:10px;color:rgba(255,255,255,0.45);line-height:1.5;border-top:1px solid rgba(255,255,255,0.06);padding-top:8px;">
-                  <span class="geo-hl-loading-${d.id}" style="color:rgba(255,255,255,0.25);font-style:italic;">Loading latest headline…</span>
-                </div>
-              </div>
             `;
 
-            // Show/hide tooltip on hover
-            const tooltip = wrapper.querySelector(`.geo-tooltip-${d.id}`) as HTMLElement;
-            const headlineSlot = wrapper.querySelector(`.geo-headline-${d.id}`) as HTMLElement;
-            wrapper.addEventListener('mouseenter', () => { if (tooltip) tooltip.style.display = 'block'; });
-            wrapper.addEventListener('mouseleave', () => { if (tooltip) tooltip.style.display = 'none'; });
+            // React state callbacks — the tooltip renders as a fixed React overlay (not clipped by globe container)
+            wrapper.addEventListener('mouseenter', (e: MouseEvent) => {
+              setHoveredHotspot(d);
+              setTooltipPos({ x: (e as any).clientX, y: (e as any).clientY });
+            });
+            wrapper.addEventListener('mousemove', (e: MouseEvent) => {
+              setTooltipPos({ x: (e as any).clientX, y: (e as any).clientY });
+            });
+            wrapper.addEventListener('mouseleave', () => {
+              setHoveredHotspot(null);
+              setTooltipPos(null);
+            });
             wrapper.addEventListener('click', (e) => {
               e.stopPropagation();
               setSelectedHotspot(d);
             });
 
-            // Async: fetch the top headline for this hotspot and inject it into the tooltip
+            // Pre-fetch headline for this hotspot into React state
             ;(async () => {
               try {
-                const q = encodeURIComponent(d.newsQuery);
-                const rssUrl = encodeURIComponent(`https://news.google.com/rss/search?q=${q}&hl=en-US&gl=US&ceid=US:en`);
-                const res = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${rssUrl}&api_key=&count=3`);
+                const rssUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(d.newsQuery)}&hl=en-US&gl=US&ceid=US:en`;
+                const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssUrl)}`;
+                const res = await fetch(apiUrl);
+                if (!res.ok) return;
                 const data = await res.json();
-                if (data.status === 'ok' && data.items?.length && headlineSlot) {
+                if (data.status === 'ok' && data.items?.length) {
                   const item = data.items[0];
-                  const parts = item.title.split(' - ');
-                  const source = parts.length > 1 ? parts.pop().trim() : '';
+                  const parts = (item.title || '').split(' - ');
+                  const source = parts.length > 1 ? parts.pop()!.trim() : '';
                   const title = parts.join(' - ').trim();
                   const pubDate = new Date(item.pubDate);
                   const diffH = Math.floor((Date.now() - pubDate.getTime()) / 3_600_000);
-                  const timeStr = diffH < 1 ? 'Just now' : diffH < 24 ? `${diffH}h ago` : `${Math.floor(diffH/24)}d ago`;
-                  headlineSlot.innerHTML = `
-                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
-                      <span style="font-size:9px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:rgba(255,255,255,0.3);">${source}</span>
-                      <span style="font-size:9px;color:rgba(255,255,255,0.2);">${timeStr}</span>
-                    </div>
-                    <div style="font-size:11px;font-weight:600;color:rgba(255,255,255,0.85);line-height:1.45;margin-bottom:6px;">${title}</div>
-                    <div style="font-size:9px;color:${d.color};font-weight:600;">Click to see all news →</div>
-                  `;
+                  const timeStr = diffH < 1 ? 'Just now' : diffH < 24 ? `${diffH}h ago` : `${Math.floor(diffH / 24)}d ago`;
+                  setHotspotHeadlines(prev => ({ ...prev, [d.id]: { title, source, timeStr, link: item.link } }));
                 }
               } catch(_) {}
             })();
@@ -1055,6 +987,58 @@ export default function MarketsScreen() {
           )}
         </div>
       )}
+
+      {/* Hotspot hover tooltip — fixed overlay, not clipped by globe container */}
+      {hoveredHotspot && tooltipPos && (() => {
+        const h = hoveredHotspot;
+        const hl = hotspotHeadlines[h.id];
+        const severityColor = h.severity === 'critical' ? '#F43F5E' : h.severity === 'high' ? '#FB923C' : '#FFB800';
+        const severityText = h.severity === 'critical' ? '🔴 CRITICAL' : h.severity === 'high' ? '🟠 HIGH RISK' : '🟡 MEDIUM';
+        // Keep tooltip on-screen: flip left if too close to right edge
+        const LEFT = Math.min(tooltipPos.x + 18, window.innerWidth - 280);
+        const TOP = Math.max(tooltipPos.y - 160, 12);
+        return (
+          <div style={{
+            position: 'fixed',
+            left: LEFT, top: TOP,
+            width: 260, zIndex: 9999,
+            background: 'rgba(5,9,22,0.97)',
+            border: `1px solid ${h.color}44`,
+            borderRadius: 14, padding: 14,
+            boxShadow: `0 8px 40px rgba(0,0,0,0.85), 0 0 24px ${h.color}18`,
+            backdropFilter: 'blur(22px)',
+            WebkitBackdropFilter: 'blur(22px)',
+            pointerEvents: 'none',
+            transition: 'top 0.05s, left 0.05s',
+          }}>
+            {/* Name + icon */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 8 }}>
+              <div style={{ width: 10, height: 10, background: h.color, transform: 'rotate(45deg)', borderRadius: 1, flexShrink: 0, boxShadow: `0 0 10px ${h.color}` }} />
+              <div style={{ fontSize: 12, fontWeight: 800, color: '#fff', lineHeight: 1.2 }}>{h.name}</div>
+            </div>
+            {/* Severity + region */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
+              <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.07em', color: severityColor, background: `${severityColor}18`, border: `1px solid ${severityColor}33`, padding: '2px 7px', borderRadius: 100 }}>{severityText}</span>
+              <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.35)' }}>{h.region}</span>
+            </div>
+            {/* Live headline */}
+            <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 9 }}>
+              {hl ? (
+                <>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
+                    <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)' }}>{hl.source}</span>
+                    <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.2)' }}>{hl.timeStr}</span>
+                  </div>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.88)', lineHeight: 1.45, marginBottom: 6 }}>{hl.title}</div>
+                  <div style={{ fontSize: 9, color: h.color, fontWeight: 600 }}>Click for all news →</div>
+                </>
+              ) : (
+                <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.28)', fontStyle: 'italic' }}>Loading headline…</span>
+              )}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* News of the Day — bottom-left persistent widget */}
       {!loading && <NewsOfDay />}
