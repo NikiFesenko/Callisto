@@ -5,6 +5,7 @@ import { getStockColor } from '@/src/lib/stockColors';
 import { CompanyNewsDrawer } from '@/src/components/watchlist/CompanyNewsDrawer';
 import topStocksData from '@/src/lib/data/top_stocks.json';
 import { GEO_HOTSPOTS, SEVERITY_PULSE, type GeoHotspot } from '@/src/lib/geoHotspots';
+import { fetchGeminiSummary, type GeminiResult } from '@/src/lib/geminiSummary';
 
 // ─── Financial Regions ────────────────────────────────────────────────────────
 const FINANCIAL_REGIONS = [
@@ -269,6 +270,150 @@ function GeoNewsDrawer({ hotspot, onClose }: { hotspot: GeoHotspot; onClose: () 
   );
 }
 
+// ─── Gemini Daily Brief Widget ───────────────────────────────────────────────
+function GeminiDailyBrief() {
+  const [result, setResult] = React.useState<GeminiResult | null>(null);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
+  const [refreshing, setRefreshing] = React.useState(false);
+
+  const load = React.useCallback(async (force = false) => {
+    try {
+      force ? setRefreshing(true) : setLoading(true);
+      setError(null);
+      const data = await fetchGeminiSummary(force);
+      setResult(data);
+    } catch (e: any) {
+      setError(e?.message || 'Failed to load');
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
+
+  React.useEffect(() => { load(); }, [load]);
+
+  const SENTIMENT_STYLE: Record<string, { color: string; bg: string; border: string }> = {
+    bullish:  { color: '#00FFA3', bg: 'rgba(0,255,163,0.08)',  border: 'rgba(0,255,163,0.2)'  },
+    bearish:  { color: '#F43F5E', bg: 'rgba(244,63,94,0.08)', border: 'rgba(244,63,94,0.2)'  },
+    neutral:  { color: '#94A3B8', bg: 'rgba(148,163,184,0.06)', border: 'rgba(148,163,184,0.15)' },
+  };
+
+  return (
+    <div style={{ width: '100%', marginBottom: 8 }}>
+      <div style={{
+        background: 'rgba(5,9,22,0.94)',
+        border: '1px solid rgba(99,102,241,0.22)',
+        borderRadius: 16,
+        backdropFilter: 'blur(28px)',
+        WebkitBackdropFilter: 'blur(28px)',
+        boxShadow: '0 4px 32px rgba(0,0,0,0.7), 0 0 0 1px rgba(99,102,241,0.06)',
+        overflow: 'hidden',
+      }}>
+
+        {/* Header */}
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '9px 13px 8px',
+          borderBottom: '1px solid rgba(99,102,241,0.12)',
+          background: 'rgba(99,102,241,0.04)',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+            {/* Gemini spark icon */}
+            <span style={{ fontSize: 13 }}>✦</span>
+            <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(199,189,255,0.85)' }}>Gemini Daily Brief</span>
+            <span style={{
+              fontSize: 9, fontWeight: 700, color: '#6366F1',
+              background: 'rgba(99,102,241,0.14)', border: '1px solid rgba(99,102,241,0.28)',
+              padding: '1px 7px', borderRadius: 100,
+            }}>AI</span>
+          </div>
+          <button
+            onClick={() => load(true)}
+            disabled={refreshing || loading}
+            style={{
+              background: 'none', border: 'none', cursor: refreshing || loading ? 'not-allowed' : 'pointer',
+              color: 'rgba(255,255,255,0.3)', fontSize: 11, padding: '2px 4px', borderRadius: 4,
+              transition: 'color 0.2s', lineHeight: 1,
+            }}
+            onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = '#fff'}
+            onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.3)'}
+            title="Regenerate summary"
+          >
+            {refreshing ? '⟳' : '↺'}
+          </button>
+        </div>
+
+        {/* Body */}
+        {loading ? (
+          <div style={{ padding: '13px 14px', display: 'flex', alignItems: 'center', gap: 9 }}>
+            <div style={{ width: 14, height: 14, borderRadius: '50%', border: '2px solid rgba(99,102,241,0.15)', borderTopColor: '#6366F1', animation: 'geo-drawer-spin 0.7s linear infinite', flexShrink: 0 }} />
+            <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>Analyzing market headlines…</span>
+          </div>
+        ) : error ? (
+          <div style={{ padding: '12px 14px' }}>
+            {error.includes('VITE_GEMINI_API_KEY') ? (
+              <div style={{ fontSize: 10, color: 'rgba(255,184,0,0.85)', lineHeight: 1.5 }}>
+                ⚠️ Add your <code style={{ background: 'rgba(255,255,255,0.05)', padding: '0 3px', borderRadius: 3 }}>VITE_GEMINI_API_KEY</code> to <code style={{ background: 'rgba(255,255,255,0.05)', padding: '0 3px', borderRadius: 3 }}>.env</code> and restart the dev server.
+              </div>
+            ) : (
+              <div style={{ fontSize: 10, color: '#F43F5E', lineHeight: 1.5 }}>⚠️ {error}</div>
+            )}
+          </div>
+        ) : result ? (
+          <div style={{ padding: '11px 14px 13px' }}>
+            {/* Summary text */}
+            <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.78)', lineHeight: 1.6, margin: '0 0 10px', fontWeight: 500 }}>
+              {result.summary}
+            </p>
+
+            {/* Theme tags */}
+            {result.themes?.length > 0 && (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginBottom: 9 }}>
+                {result.themes.map((t, i) => {
+                  const s = SENTIMENT_STYLE[t.sentiment] || SENTIMENT_STYLE.neutral;
+                  return (
+                    <span key={i} style={{
+                      display: 'inline-flex', alignItems: 'center', gap: 4,
+                      fontSize: 10, fontWeight: 700,
+                      color: s.color, background: s.bg, border: `1px solid ${s.border}`,
+                      padding: '2px 8px', borderRadius: 100,
+                    }}>
+                      <span>{t.emoji}</span>{t.label}
+                    </span>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Top risk */}
+            {result.topRisk && (
+              <div style={{
+                display: 'flex', gap: 7, padding: '7px 9px',
+                background: 'rgba(244,63,94,0.06)', border: '1px solid rgba(244,63,94,0.15)',
+                borderRadius: 8,
+              }}>
+                <span style={{ fontSize: 10, flexShrink: 0 }}>⚠️</span>
+                <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.55)', lineHeight: 1.5 }}>
+                  <strong style={{ color: '#F43F5E', fontWeight: 700 }}>Top Risk: </strong>
+                  {result.topRisk}
+                </span>
+              </div>
+            )}
+
+            {/* Timestamp */}
+            {result.generatedAt && (
+              <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.2)', marginTop: 8, textAlign: 'right' }}>
+                Generated {new Date(result.generatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              </div>
+            )}
+          </div>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
 // ─── News of the Day Widget ───────────────────────────────────────────────────
 function NewsOfDay() {
   const [headlines, setHeadlines] = React.useState<any[]>([]);
@@ -326,7 +471,7 @@ function NewsOfDay() {
   const active = headlines[activeIdx];
 
   return (
-    <div style={{ position: 'absolute', bottom: 28, left: 28, zIndex: 20, width: expanded ? 380 : 320, transition: 'width 0.35s cubic-bezier(0.16,1,0.3,1)' }}>
+    <div style={{ width: '100%', transition: 'width 0.35s cubic-bezier(0.16,1,0.3,1)' }}>
       <div style={{ background: 'rgba(5,9,22,0.94)', border: '1px solid rgba(255,255,255,0.09)', borderRadius: 16, backdropFilter: 'blur(28px)', WebkitBackdropFilter: 'blur(28px)', boxShadow: '0 8px 40px rgba(0,0,0,0.75)', overflow: 'hidden' }}>
 
         {/* Header — always clickable */}
@@ -1040,8 +1185,16 @@ export default function MarketsScreen() {
         );
       })()}
 
-      {/* News of the Day — bottom-left persistent widget */}
-      {!loading && <NewsOfDay />}
+      {/* Bottom-left widget stack: Gemini Brief above News of the Day */}
+      {!loading && (
+        <div style={{
+          position: 'absolute', bottom: 28, left: 28, zIndex: 20,
+          width: 320, display: 'flex', flexDirection: 'column',
+        }}>
+          <GeminiDailyBrief />
+          <NewsOfDay />
+        </div>
+      )}
 
       {/* Bottom hover badge */}
       {!loading && hoveredRegion && (() => {
