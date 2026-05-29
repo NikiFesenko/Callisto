@@ -127,6 +127,96 @@ const FLY_TARGETS: Record<string, { lat: number; lng: number; altitude: number }
   'Africa':        { lat:  0, lng:   25, altitude: 1.7 },
 };
 
+// ─── Country → Primary Index Data (GDP > $1 trillion) ────────────────────────
+// Static snapshot; replace prices/changes with a live feed if desired.
+const COUNTRY_INDEX_MAP: Record<
+  string,
+  { ticker: string; label: string; price: number; change: number; currency: string }
+> = {
+  // North America
+  'United States of America': { ticker: 'S&P 500',   label: 'S&P 500',       price: 5467.21, change:  0.72, currency: 'USD' },
+  'Canada':                   { ticker: 'TSX',        label: 'TSX Composite', price: 22318.40, change:  0.31, currency: 'CAD' },
+  'Mexico':                   { ticker: 'IPC',        label: 'BMV IPC',       price: 53402.10, change: -0.18, currency: 'MXN' },
+  // Europe
+  'United Kingdom':           { ticker: 'FTSE 100',   label: 'FTSE 100',      price: 8243.50, change:  0.44, currency: 'GBP' },
+  'Germany':                  { ticker: 'DAX',        label: 'DAX 40',        price: 18720.35, change:  0.58, currency: 'EUR' },
+  'France':                   { ticker: 'CAC 40',     label: 'CAC 40',        price: 7640.80, change:  0.23, currency: 'EUR' },
+  'Italy':                    { ticker: 'FTSE MIB',   label: 'FTSE MIB',     price: 33812.00, change:  0.39, currency: 'EUR' },
+  'Spain':                    { ticker: 'IBEX 35',    label: 'IBEX 35',      price: 11284.70, change:  0.12, currency: 'EUR' },
+  'Netherlands':              { ticker: 'AEX',        label: 'AEX Index',    price:  893.45, change:  0.55, currency: 'EUR' },
+  'Switzerland':              { ticker: 'SMI',        label: 'Swiss SMI',    price: 11892.60, change:  0.27, currency: 'CHF' },
+  'Sweden':                   { ticker: 'OMX S30',    label: 'OMX Stockholm', price: 2318.90, change: -0.09, currency: 'SEK' },
+  'Poland':                   { ticker: 'WIG20',      label: 'WIG 20',       price: 2447.30, change:  0.21, currency: 'PLN' },
+  'Belgium':                  { ticker: 'BEL 20',     label: 'BEL 20',       price: 4012.80, change:  0.14, currency: 'EUR' },
+  // Asia Pacific
+  'Japan':                    { ticker: 'Nikkei 225', label: 'Nikkei 225',   price: 38712.55, change:  1.14, currency: 'JPY' },
+  'China':                    { ticker: 'SSE Comp.',  label: 'Shanghai Comp',price: 3089.26, change: -0.43, currency: 'CNY' },
+  'South Korea':              { ticker: 'KOSPI',      label: 'KOSPI',        price: 2734.21, change:  0.62, currency: 'KRW' },
+  'Australia':                { ticker: 'ASX 200',    label: 'ASX 200',      price: 7812.40, change:  0.37, currency: 'AUD' },
+  'India':                    { ticker: 'SENSEX',     label: 'BSE Sensex',   price: 79823.10, change:  0.91, currency: 'INR' },
+  'Indonesia':                { ticker: 'IDX Comp.',  label: 'IDX Composite',price: 7124.80, change: -0.25, currency: 'IDR' },
+  'Taiwan':                   { ticker: 'TAIEX',      label: 'Taiwan TAIEX', price: 21034.55, change:  1.23, currency: 'TWD' },
+  'Singapore':                { ticker: 'STI',        label: 'Straits Times',price: 3412.70, currency: 'SGD', change:  0.18 },
+  // Middle East
+  'Saudi Arabia':             { ticker: 'TASI',       label: 'Tadawul TASI', price: 11892.30, change:  0.65, currency: 'SAR' },
+  'United Arab Emirates':     { ticker: 'DFM',        label: 'DFM Index',    price: 4478.90, change:  0.42, currency: 'AED' },
+  'Qatar':                    { ticker: 'QE Index',   label: 'QSE Index',    price: 10234.10, change: -0.11, currency: 'QAR' },
+  'Israel':                   { ticker: 'TA-35',      label: 'Tel Aviv 35',  price: 2234.80, change:  0.33, currency: 'ILS' },
+  'Turkey':                   { ticker: 'BIST 100',   label: 'BIST 100',     price: 10842.70, change: -1.21, currency: 'TRY' },
+  // Latin America
+  'Brazil':                   { ticker: 'Ibovespa',   label: 'Ibovespa',     price: 127834.50, change:  0.47, currency: 'BRL' },
+  'Argentina':                { ticker: 'MERVAL',     label: 'Merval',       price: 1623480.0, change:  2.13, currency: 'ARS' },
+  'Chile':                    { ticker: 'IPSA',       label: 'S&P IPSA',     price: 6482.30, change:  0.08, currency: 'CLP' },
+  'Colombia':                 { ticker: 'COLCAP',     label: 'COLCAP',       price: 1423.80, change: -0.34, currency: 'COP' },
+  // Africa
+  'South Africa':             { ticker: 'JSE Top 40', label: 'JSE Top 40',   price: 72834.60, change:  0.56, currency: 'ZAR' },
+  'Nigeria':                  { ticker: 'NGX 30',     label: 'NGX 30',       price: 4812.40, change:  0.29, currency: 'NGN' },
+  'Egypt':                    { ticker: 'EGX 30',     label: 'EGX 30',       price: 28934.10, change: -0.72, currency: 'EGP' },
+  // Rest of world with $1T+ GDP
+  'Russia':                   { ticker: 'MOEX',       label: 'MOEX Russia',  price: 2934.80, change: -0.88, currency: 'RUB' },
+  'Netherlands':              { ticker: 'AEX',        label: 'AEX Index',    price:  893.45, change:  0.55, currency: 'EUR' },
+  'Bangladesh':               { ticker: 'DSEX',       label: 'DSEX Index',   price: 5234.10, change:  0.14, currency: 'BDT' },
+  'Thailand':                 { ticker: 'SET',        label: 'SET Index',    price: 1348.20, change: -0.38, currency: 'THB' },
+  'Malaysia':                 { ticker: 'KLCI',       label: 'FTSE KLCI',    price: 1612.80, change:  0.22, currency: 'MYR' },
+  'Vietnam':                  { ticker: 'VN-Index',   label: 'VN-Index',     price: 1278.50, change:  0.47, currency: 'VND' },
+  'Philippines':              { ticker: 'PSEi',       label: 'PSEi Index',   price: 6712.30, change: -0.15, currency: 'PHP' },
+  'Pakistan':                 { ticker: 'KSE 100',    label: 'KSE-100',      price: 76834.20, change:  0.93, currency: 'PKR' },
+  'Iran':                     { ticker: 'TEDPIX',     label: 'TEDPIX',       price: 2134820.0, change: 1.44, currency: 'IRR' },
+  'Iraq':                     { ticker: 'ISX60',      label: 'ISX 60',       price: 842.30, change:  0.08, currency: 'IQD' },
+  'Kuwait':                   { ticker: 'BKI',        label: 'Boursa Kuwait',price: 7234.80, change:  0.31, currency: 'KWD' },
+  'Morocco':                  { ticker: 'MASI',       label: 'MASI Index',   price: 12834.10, change:  0.19, currency: 'MAD' },
+  'Ethiopia':                 { ticker: 'ESX',        label: 'ESX Index',    price: 1248.30, change:  0.05, currency: 'ETB' },
+  'Kenya':                    { ticker: 'NSE 20',     label: 'NSE 20',       price: 1834.60, change: -0.22, currency: 'KES' },
+  'New Zealand':              { ticker: 'NZX 50',     label: 'NZX 50',       price: 11834.20, change:  0.28, currency: 'NZD' },
+  'Austria':                  { ticker: 'ATX',        label: 'ATX Index',    price: 3672.80, change:  0.17, currency: 'EUR' },
+  'Czech Republic':           { ticker: 'PX',         label: 'Prague PX',    price: 1534.90, change:  0.09, currency: 'CZK' },
+  'Romania':                  { ticker: 'BET',        label: 'BET Index',    price: 17834.30, change:  0.42, currency: 'RON' },
+  'Greece':                   { ticker: 'ATG',        label: 'Athens GI',    price: 1478.20, change:  0.25, currency: 'EUR' },
+  'Norway':                   { ticker: 'OBX',        label: 'OBX Index',    price: 1234.70, change:  0.35, currency: 'NOK' },
+  'Denmark':                  { ticker: 'OMXC25',     label: 'OMX Copenhagen',price: 2134.80, change:  0.41, currency: 'DKK' },
+  'Finland':                  { ticker: 'OMXH25',     label: 'OMX Helsinki', price: 5234.60, change:  0.12, currency: 'EUR' },
+  'Portugal':                 { ticker: 'PSI-20',     label: 'PSI 20',       price: 6834.90, change:  0.18, currency: 'EUR' },
+  'Ireland':                  { ticker: 'ISEQ',       label: 'ISEQ Overall', price: 9234.10, change:  0.29, currency: 'EUR' },
+  'Hungary':                  { ticker: 'BUX',        label: 'BUX Index',    price: 72834.40, change: -0.14, currency: 'HUF' },
+  'Bahrain':                  { ticker: 'BAX',        label: 'Bahrain BAX',  price: 1934.20, change:  0.07, currency: 'BHD' },
+  'Oman':                     { ticker: 'MSM 30',     label: 'MSM 30',       price: 4534.80, change: -0.09, currency: 'OMR' },
+  'Peru':                     { ticker: 'S&P BVL',    label: 'S&P BVL Peru', price: 20834.10, change: -0.27, currency: 'PEN' },
+  'Ghana':                    { ticker: 'GSE-CI',     label: 'GSE Comp.',    price: 4234.80, change:  0.33, currency: 'GHS' },
+  'Tanzania':                 { ticker: 'DSE Index',  label: 'DSE Index',    price: 2134.60, change:  0.11, currency: 'TZS' },
+};
+
+function getCountryIndex(countryName: string) {
+  if (!countryName) return null;
+  // Exact match first
+  if (COUNTRY_INDEX_MAP[countryName]) return COUNTRY_INDEX_MAP[countryName];
+  // Fuzzy match
+  const key = Object.keys(COUNTRY_INDEX_MAP).find(k =>
+    countryName.toLowerCase().includes(k.toLowerCase()) ||
+    k.toLowerCase().includes(countryName.toLowerCase())
+  );
+  return key ? COUNTRY_INDEX_MAP[key] : null;
+}
+
 // ─── Generate solid dark canvas texture ───────────────────────────────────────
 function makeDarkTexture(color = '#030C1A'): string {
   const cv = document.createElement('canvas');
@@ -570,6 +660,14 @@ export default function MarketsScreen() {
   const [tooltipPos, setTooltipPos] = useState<{x: number; y: number} | null>(null);
   const [hotspotHeadlines, setHotspotHeadlines] = useState<Record<string, {title: string; source: string; timeStr: string; link: string} | null>>({});
 
+  // Country Index hover card state
+  const [hoveredCountryIndex, setHoveredCountryIndex] = useState<{
+    countryName: string;
+    index: { ticker: string; label: string; price: number; change: number; currency: string };
+  } | null>(null);
+  const [countryCardPos, setCountryCardPos] = useState<{x: number; y: number} | null>(null);
+  const mousePosRef = useRef<{x: number; y: number}>({ x: 0, y: 0 });
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeRegion, setActiveRegion] = useState<string | null>(null);
@@ -740,6 +838,21 @@ export default function MarketsScreen() {
             hoveredRegionRef.current = regionName;
             setHoveredRegion(regionName);
             if (el) el.style.cursor = region ? 'pointer' : 'grab';
+
+            // Country Index hover card
+            if (feat) {
+              const idx = getCountryIndex(name);
+              if (idx) {
+                setHoveredCountryIndex({ countryName: name, index: idx });
+                setCountryCardPos({ x: mousePosRef.current.x, y: mousePosRef.current.y });
+              } else {
+                setHoveredCountryIndex(null);
+                setCountryCardPos(null);
+              }
+            } else {
+              setHoveredCountryIndex(null);
+              setCountryCardPos(null);
+            }
           })
           .onPolygonClick((feat: any) => {
             const name = feat?.properties?.ADMIN ?? feat?.properties?.name ?? '';
@@ -772,6 +885,14 @@ export default function MarketsScreen() {
         el.addEventListener('touchstart', stopSpin, { once: false, passive: true });
         // Store for cleanup
         globe._stopSpin = stopSpin;
+
+        // Track raw mouse position so country hover card follows the cursor
+        const onMouseMove = (e: MouseEvent) => {
+          mousePosRef.current = { x: e.clientX, y: e.clientY };
+          setCountryCardPos(prev => prev ? { x: e.clientX, y: e.clientY } : null);
+        };
+        el.addEventListener('mousemove', onMouseMove);
+        globe._onMouseMove = onMouseMove;
 
         globe.pointOfView({ lat: 20, lng: 10, altitude: 2.4 }, 0);
 
@@ -910,6 +1031,10 @@ export default function MarketsScreen() {
             elRef.removeEventListener('mousedown', globe._stopSpin);
             elRef.removeEventListener('touchstart', globe._stopSpin);
           }
+        }
+        if (globe._onMouseMove) {
+          const elRef = containerRef.current;
+          if (elRef) elRef.removeEventListener('mousemove', globe._onMouseMove);
         }
         globe._destructor?.();
       }
@@ -1185,6 +1310,102 @@ export default function MarketsScreen() {
         );
       })()}
 
+      {/* ── Country Index Hover Card ─────────────────────────────────────── */}
+      {hoveredCountryIndex && countryCardPos && (() => {
+        const { countryName, index } = hoveredCountryIndex;
+        const isUp = index.change >= 0;
+        const changeColor = isUp ? '#00FFA3' : '#F43F5E';
+        const changeBg    = isUp ? 'rgba(0,255,163,0.10)' : 'rgba(244,63,94,0.10)';
+        const changeBorder= isUp ? 'rgba(0,255,163,0.25)' : 'rgba(244,63,94,0.25)';
+        const changeArrow = isUp ? '▲' : '▼';
+
+        // Card is 230px wide; offset 16px right and 12px above cursor
+        const cardW = 230;
+        const cardH = 110;
+        const margin = 14;
+        let left = countryCardPos.x + 16;
+        let top  = countryCardPos.y - cardH - 12;
+
+        // Viewport collision guards
+        if (left + cardW + margin > window.innerWidth) left = countryCardPos.x - cardW - 10;
+        if (top < margin) top = countryCardPos.y + 18;
+
+        // Format price nicely
+        const fmt = new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        const priceStr = fmt.format(index.price);
+
+        return (
+          <div
+            key={countryName}
+            style={{
+              position: 'fixed',
+              left,
+              top,
+              width: cardW,
+              zIndex: 9998,
+              background: 'rgba(6,9,22,0.96)',
+              border: '1px solid rgba(255,255,255,0.10)',
+              borderRadius: 14,
+              padding: '13px 16px 14px',
+              boxShadow: '0 12px 48px rgba(0,0,0,0.85), 0 0 0 1px rgba(255,255,255,0.04)',
+              backdropFilter: 'blur(28px)',
+              WebkitBackdropFilter: 'blur(28px)',
+              pointerEvents: 'none',
+              willChange: 'transform',
+              animation: 'indexCard-pop 0.15s cubic-bezier(0.16,1,0.3,1)',
+            }}
+          >
+            {/* Country name */}
+            <div style={{
+              fontSize: 9, fontWeight: 700, letterSpacing: '0.13em',
+              textTransform: 'uppercase', color: 'rgba(255,255,255,0.35)',
+              marginBottom: 6,
+            }}>
+              {countryName}
+            </div>
+
+            {/* Index label + ticker */}
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 7, marginBottom: 10 }}>
+              <span style={{ fontSize: 15, fontWeight: 800, color: '#fff', letterSpacing: '-0.3px' }}>
+                {index.label}
+              </span>
+              <span style={{
+                fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.38)',
+                background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.10)',
+                padding: '1px 6px', borderRadius: 6,
+              }}>
+                {index.ticker}
+              </span>
+            </div>
+
+            {/* Divider */}
+            <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)', marginBottom: 10 }} />
+
+            {/* Price + change row */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 5 }}>
+                <span style={{ fontSize: 18, fontWeight: 800, color: '#fff', letterSpacing: '-0.5px', fontVariantNumeric: 'tabular-nums' }}>
+                  {priceStr}
+                </span>
+                <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.28)', fontWeight: 500 }}>
+                  {index.currency}
+                </span>
+              </div>
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: 4,
+                background: changeBg, border: `1px solid ${changeBorder}`,
+                borderRadius: 8, padding: '3px 9px',
+              }}>
+                <span style={{ fontSize: 9, color: changeColor }}>{changeArrow}</span>
+                <span style={{ fontSize: 12, fontWeight: 700, color: changeColor, fontVariantNumeric: 'tabular-nums' }}>
+                  {Math.abs(index.change).toFixed(2)}%
+                </span>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
       {/* Bottom-left widget stack: Gemini Brief above News of the Day */}
       {!loading && (
         <div style={{
@@ -1430,6 +1651,10 @@ export default function MarketsScreen() {
         @keyframes scaleUp {
           from { opacity: 0; transform: scale(0.95); }
           to { opacity: 1; transform: scale(1); }
+        }
+        @keyframes indexCard-pop {
+          from { opacity: 0; transform: scale(0.94) translateY(4px); }
+          to   { opacity: 1; transform: scale(1)    translateY(0);    }
         }
       `}</style>
 
