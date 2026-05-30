@@ -1,25 +1,29 @@
 /**
- * useGeminiSummary
- * Fetches top financial/geopolitical news headlines then asks Gemini
- * to summarize them into a concise daily market brief.
+ * geminiSummary.ts
  *
- * Results are cached in localStorage keyed by today's date so
- * Gemini is only called once per day (or on explicit refresh).
+ * Two capabilities:
+ * 1. fetchGeminiSummary  — daily market brief (cached per-day in localStorage)
+ * 2. callGeminiChat      — multi-turn financial advisor chat
  */
 
 const CACHE_KEY = 'gemini_daily_brief';
-const MODEL = 'gemini-3.5-flash'; // Works on v1 endpoint
+const MODEL = 'gemini-2.0-flash';
 const NEWS_RSS_QUERY = 'stock market OR geopolitical OR oil price OR Fed OR war OR sanctions OR tariffs';
 
-interface GeminiResult {
-  summary: string;           // 2–3 sentence market overview
+export interface GeminiResult {
+  summary: string;
   themes: { label: string; sentiment: 'bullish' | 'bearish' | 'neutral'; emoji: string }[];
-  topRisk: string;           // single biggest macro risk today
-  generatedAt: string;       // ISO timestamp
+  topRisk: string;
+  generatedAt: string;
+}
+
+export interface ChatMessage {
+  role: 'user' | 'model';
+  text: string;
 }
 
 interface CacheEntry {
-  date: string;              // YYYY-MM-DD
+  date: string;
   data: GeminiResult;
 }
 
@@ -27,6 +31,15 @@ interface CacheEntry {
 
 function todayStr() {
   return new Date().toISOString().slice(0, 10);
+}
+
+function getApiKey(): string {
+  const rawKey = (import.meta as any).env?.VITE_GEMINI_API_KEY as string | undefined;
+  const key = rawKey ? rawKey.trim() : '';
+  if (!key || key === 'YOUR_GEMINI_API_KEY_HERE') {
+    throw new Error('VITE_GEMINI_API_KEY not set — add it to your .env file');
+  }
+  return key;
 }
 
 function readCache(): GeminiResult | null {
@@ -46,7 +59,7 @@ function writeCache(data: GeminiResult) {
   } catch (_) {}
 }
 
-// ── Fetch headlines from Google News RSS via rss2json ──────────────────────
+// ── Fetch headlines ────────────────────────────────────────────────────────
 
 async function fetchHeadlines(): Promise<string[]> {
   const rssUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(NEWS_RSS_QUERY)}&hl=en-US&gl=US&ceid=US:en`;
@@ -57,12 +70,12 @@ async function fetchHeadlines(): Promise<string[]> {
   if (data.status !== 'ok' || !Array.isArray(data.items)) throw new Error('Bad RSS response');
   return data.items.slice(0, 12).map((item: any) => {
     const parts = (item.title || '').split(' - ');
-    if (parts.length > 1) parts.pop(); // strip source
+    if (parts.length > 1) parts.pop();
     return parts.join(' - ').trim();
   }).filter(Boolean);
 }
 
-// ── Call Gemini via Vite proxy ─────────────────────────────────────────────
+// ── Daily brief (structured JSON output) ──────────────────────────────────
 
 async function callGemini(headlines: string[], apiKey: string): Promise<GeminiResult> {
   const prompt = `You are a senior macro analyst. Below are today's top financial and geopolitical news headlines.
@@ -126,12 +139,92 @@ Respond with a JSON object (no markdown, no code fences) with exactly this shape
 
   const json = await res.json();
   const text: string = json.candidates?.[0]?.content?.parts?.[0]?.text || '';
-
-  // Parse text directly as it is guaranteed to be well-formed JSON by the schema
   return JSON.parse(text.trim()) as GeminiResult;
 }
 
-// ── Public hook ────────────────────────────────────────────────────────────
+// ── Multi-turn financial advisor chat ──────────────────────────────────────
+
+const ADVISOR_SYSTEM_INSTRUCTION = `You are Colisto AI, an elite financial advisor and macro strategist embedded in a professional trading terminal. You have deep expertise in:
+- Global equity markets, indices, and sector rotation
+- Fixed income, rates, and central bank policy
+- Commodities, FX, and crypto markets
+- Geopolitical risk and its market impact
+- Portfolio construction and risk management
+
+Your communication style:
+- Concise but substantive — no filler words
+- Data-driven — cite specific levels, percentages, or historical parallels when relevant
+- Balanced — present bull and bear cases fairly
+- Actionable — end with a clear takeaway or watchpoint
+- Never give personalized investment advice or guarantee returns; frame all views as analysis
+
+Format your responses in clean plain text. Use short paragraphs. When listing items, use a simple dash (—) as bullet. Keep responses under 200 words unless the question genuinely requires depth.`;
+
+/**
+ * Sends a multi-turn conversation to Gemini and returns the model's reply text.
+ * @param history  Full conversation history (user + model turns so far)
+ * @param userMessage  The new user message to append
+ */
+export async function callGeminiChat(
+  history: ChatMessage[],
+  userMessage: string
+): Promise<string> {
+  const apiKey = getApiKey();
+  const url = `/api/gemini/v1beta/models/${MODEL}:generateContent?key=${apiKey}`;
+
+  // Inject the system persona as the very first user/model exchange so it
+  // is always honoured even if the endpoint ignores system_instruction.
+  const systemTurn = [
+    { role: 'user',  parts: [{ text: `You are Colisto AI. Instructions: ${ADVISOR_SYSTEM_INSTRUCTION}\n\nAcknowledge with a single word.` }] },
+    { role: 'model', parts: [{ text: 'Understood.' }] },
+  ];
+
+  // Build the rest of the contents from existing history + new message.
+  // Ensure history alternates user/model starting with user.
+  const historyContents = history.map(m => ({
+    role: m.role,
+    parts: [{ text: m.text }],
+  }));
+
+  const contents = [
+    ...systemTurn,
+    ...historyContents,
+    { role: 'user' as const, parts: [{ text: userMessage }] },
+  ];
+
+  const body = {
+    contents,
+    generationConfig: {
+      temperature: 0.55,
+      maxOutputTokens: 1024,
+    },
+  };
+
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok) {
+    const errText = await res.text();
+    // Try to extract a human-readable message from Gemini's error JSON
+    try {
+      const errJson = JSON.parse(errText);
+      const msg = errJson?.error?.message || errText;
+      throw new Error(msg);
+    } catch {
+      throw new Error(`API error ${res.status}: ${errText.slice(0, 120)}`);
+    }
+  }
+
+  const json = await res.json();
+  const text: string = json.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  if (!text) throw new Error('Empty response from Gemini — try again');
+  return text.trim();
+}
+
+// ── Public API ─────────────────────────────────────────────────────────────
 
 export async function fetchGeminiSummary(forceRefresh = false): Promise<GeminiResult> {
   if (!forceRefresh) {
@@ -139,12 +232,7 @@ export async function fetchGeminiSummary(forceRefresh = false): Promise<GeminiRe
     if (cached) return cached;
   }
 
-  const rawKey = (import.meta as any).env?.VITE_GEMINI_API_KEY as string | undefined;
-  const apiKey = rawKey ? rawKey.trim() : '';
-  if (!apiKey || apiKey === 'YOUR_GEMINI_API_KEY_HERE') {
-    throw new Error('VITE_GEMINI_API_KEY not set — add it to your .env file');
-  }
-
+  const apiKey = getApiKey();
   const headlines = await fetchHeadlines();
   if (!headlines.length) throw new Error('No headlines fetched');
 
@@ -152,5 +240,3 @@ export async function fetchGeminiSummary(forceRefresh = false): Promise<GeminiRe
   writeCache(result);
   return result;
 }
-
-export type { GeminiResult };

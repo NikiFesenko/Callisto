@@ -5,7 +5,7 @@ import { getStockColor } from '@/src/lib/stockColors';
 import { CompanyNewsDrawer } from '@/src/components/watchlist/CompanyNewsDrawer';
 import topStocksData from '@/src/lib/data/top_stocks.json';
 import { GEO_HOTSPOTS, SEVERITY_PULSE, type GeoHotspot } from '@/src/lib/geoHotspots';
-import { fetchGeminiSummary, type GeminiResult } from '@/src/lib/geminiSummary';
+import { fetchGeminiSummary, callGeminiChat, type GeminiResult, type ChatMessage } from '@/src/lib/geminiSummary';
 
 // ─── Financial Regions ────────────────────────────────────────────────────────
 const FINANCIAL_REGIONS = [
@@ -360,146 +360,281 @@ function GeoNewsDrawer({ hotspot, onClose }: { hotspot: GeoHotspot; onClose: () 
   );
 }
 
-// ─── Gemini Daily Brief Widget ───────────────────────────────────────────────
-function GeminiDailyBrief() {
-  const [result, setResult] = React.useState<GeminiResult | null>(null);
-  const [loading, setLoading] = React.useState(true);
-  const [error, setError] = React.useState<string | null>(null);
-  const [refreshing, setRefreshing] = React.useState(false);
+// ─── Colisto AI Advisor Chat Widget ─────────────────────────────────────────
+const FOLLOW_UP_CHIPS = [
+  { icon: '📈', label: 'Best sectors today?' },
+  { icon: '⚠️', label: 'Biggest risk right now?' },
+  { icon: '🌏', label: 'EM vs DM outlook?' },
+  { icon: '💵', label: 'Dollar impact on markets?' },
+  { icon: '🪙',  label: 'Crypto macro signal?' },
+  { icon: '🛢️', label: 'Oil & energy outlook?' },
+];
 
-  const load = React.useCallback(async (force = false) => {
+const SENTIMENT_STYLE: Record<string, { color: string; bg: string; border: string }> = {
+  bullish: { color: '#00FFA3', bg: 'rgba(0,255,163,0.08)',    border: 'rgba(0,255,163,0.2)'    },
+  bearish: { color: '#F43F5E', bg: 'rgba(244,63,94,0.08)',   border: 'rgba(244,63,94,0.2)'    },
+  neutral: { color: '#94A3B8', bg: 'rgba(148,163,184,0.06)', border: 'rgba(148,163,184,0.15)' },
+};
+
+function GeminiDailyBrief() {
+  // ── Brief state ──────────────────────────────────────────────────────────
+  const [brief, setBrief]               = React.useState<GeminiResult | null>(null);
+  const [briefLoading, setBriefLoading] = React.useState(true);
+  const [briefError, setBriefError]     = React.useState<string | null>(null);
+  const [refreshing, setRefreshing]     = React.useState(false);
+
+  // ── Chat state ───────────────────────────────────────────────────────────
+  const [messages, setMessages]         = React.useState<ChatMessage[]>([]);
+  const [inputText, setInputText]       = React.useState('');
+  const [chatLoading, setChatLoading]   = React.useState(false);
+
+  const scrollRef = React.useRef<HTMLDivElement>(null);
+  const inputRef  = React.useRef<HTMLInputElement>(null);
+
+  // Auto-scroll to bottom when messages update
+  React.useEffect(() => {
+    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+  }, [messages, chatLoading]);
+
+  // Load brief on mount
+  const loadBrief = React.useCallback(async (force = false) => {
     try {
-      force ? setRefreshing(true) : setLoading(true);
-      setError(null);
+      force ? setRefreshing(true) : setBriefLoading(true);
+      setBriefError(null);
       const data = await fetchGeminiSummary(force);
-      setResult(data);
+      setBrief(data);
     } catch (e: any) {
-      setError(e?.message || 'Failed to load');
+      setBriefError(e?.message || 'Failed to load');
     } finally {
-      setLoading(false);
+      setBriefLoading(false);
       setRefreshing(false);
     }
   }, []);
 
-  React.useEffect(() => { load(); }, [load]);
+  React.useEffect(() => { loadBrief(); }, [loadBrief]);
 
-  const SENTIMENT_STYLE: Record<string, { color: string; bg: string; border: string }> = {
-    bullish:  { color: '#00FFA3', bg: 'rgba(0,255,163,0.08)',  border: 'rgba(0,255,163,0.2)'  },
-    bearish:  { color: '#F43F5E', bg: 'rgba(244,63,94,0.08)', border: 'rgba(244,63,94,0.2)'  },
-    neutral:  { color: '#94A3B8', bg: 'rgba(148,163,184,0.06)', border: 'rgba(148,163,184,0.15)' },
+  // Keep a ref to messages so sendMessage always reads the latest value
+  // without needing messages in its dependency array (avoids stale closure)
+  const messagesRef = React.useRef<ChatMessage[]>([]);
+  React.useEffect(() => { messagesRef.current = messages; }, [messages]);
+
+  // Send a message (chip tap or typed)
+  const sendMessage = React.useCallback(async (text: string) => {
+    if (!text.trim() || chatLoading) return;
+    const trimmed = text.trim();
+    const historySnapshot = messagesRef.current; // stable snapshot via ref
+    setMessages(prev => [...prev, { role: 'user', text: trimmed }]);
+    setInputText('');
+    setChatLoading(true);
+
+    try {
+      const reply = await callGeminiChat(historySnapshot, trimmed);
+      setMessages(prev => [...prev, { role: 'model', text: reply }]);
+    } catch (e: any) {
+      // Keep the user message — append a visible error AI bubble instead of vanishing
+      const errText = e?.message || 'Something went wrong. Please try again.';
+      setMessages(prev => [...prev, { role: 'model', text: `⚠️ ${errText}` }]);
+    } finally {
+      setChatLoading(false);
+    }
+  }, [chatLoading]);
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(inputText); }
   };
+
+  const hasChatHistory = messages.length > 0;
 
   return (
     <div style={{ width: '100%', marginBottom: 8 }}>
       <div style={{
-        background: 'rgba(5,9,22,0.94)',
+        background: 'rgba(5,9,22,0.96)',
         border: '1px solid rgba(99,102,241,0.22)',
         borderRadius: 16,
         backdropFilter: 'blur(28px)',
         WebkitBackdropFilter: 'blur(28px)',
-        boxShadow: '0 4px 32px rgba(0,0,0,0.7), 0 0 0 1px rgba(99,102,241,0.06)',
+        boxShadow: '0 4px 32px rgba(0,0,0,0.75), 0 0 0 1px rgba(99,102,241,0.06)',
         overflow: 'hidden',
       }}>
 
-        {/* Header */}
+        {/* ── Header ──────────────────────────────────────────────────── */}
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '9px 13px 8px',
+          padding: '9px 12px 8px',
           borderBottom: '1px solid rgba(99,102,241,0.12)',
           background: 'rgba(99,102,241,0.04)',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-            {/* Gemini spark icon */}
             <span style={{ fontSize: 13 }}>✦</span>
-            <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(199,189,255,0.85)' }}>Gemini Daily Brief</span>
-            <span style={{
-              fontSize: 9, fontWeight: 700, color: '#6366F1',
-              background: 'rgba(99,102,241,0.14)', border: '1px solid rgba(99,102,241,0.28)',
-              padding: '1px 7px', borderRadius: 100,
-            }}>AI</span>
+            <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(199,189,255,0.9)' }}>Colisto AI</span>
+            <span style={{ fontSize: 9, fontWeight: 700, color: '#6366F1', background: 'rgba(99,102,241,0.14)', border: '1px solid rgba(99,102,241,0.28)', padding: '1px 7px', borderRadius: 100 }}>ADVISOR</span>
           </div>
-          <button
-            onClick={() => load(true)}
-            disabled={refreshing || loading}
-            style={{
-              background: 'none', border: 'none', cursor: refreshing || loading ? 'not-allowed' : 'pointer',
-              color: 'rgba(255,255,255,0.3)', fontSize: 11, padding: '2px 4px', borderRadius: 4,
-              transition: 'color 0.2s', lineHeight: 1,
-            }}
-            onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = '#fff'}
-            onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.3)'}
-            title="Regenerate summary"
-          >
-            {refreshing ? '⟳' : '↺'}
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            {hasChatHistory && (
+              <button
+                onClick={() => { setMessages([]); }}
+                title="Clear chat"
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.25)', fontSize: 10, padding: '2px 4px', borderRadius: 4, transition: 'color 0.15s', lineHeight: 1 }}
+                onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = '#F43F5E'}
+                onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.25)'}
+              >✕</button>
+            )}
+            <button
+              onClick={() => loadBrief(true)}
+              disabled={refreshing || briefLoading}
+              title="Regenerate brief"
+              style={{ background: 'none', border: 'none', cursor: refreshing || briefLoading ? 'not-allowed' : 'pointer', color: 'rgba(255,255,255,0.3)', fontSize: 11, padding: '2px 4px', borderRadius: 4, transition: 'color 0.15s', lineHeight: 1 }}
+              onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = '#fff'}
+              onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.3)'}
+            >{refreshing ? '⟳' : '↺'}</button>
+          </div>
         </div>
 
-        {/* Body */}
-        {loading ? (
-          <div style={{ padding: '13px 14px', display: 'flex', alignItems: 'center', gap: 9 }}>
-            <div style={{ width: 14, height: 14, borderRadius: '50%', border: '2px solid rgba(99,102,241,0.15)', borderTopColor: '#6366F1', animation: 'geo-drawer-spin 0.7s linear infinite', flexShrink: 0 }} />
+        {/* ── Daily Brief ─────────────────────────────────────────────── */}
+        {briefLoading ? (
+          <div style={{ padding: '12px 13px', display: 'flex', alignItems: 'center', gap: 9 }}>
+            <div style={{ width: 13, height: 13, borderRadius: '50%', border: '2px solid rgba(99,102,241,0.15)', borderTopColor: '#6366F1', animation: 'geo-drawer-spin 0.7s linear infinite', flexShrink: 0 }} />
             <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>Analyzing market headlines…</span>
           </div>
-        ) : error ? (
-          <div style={{ padding: '12px 14px' }}>
-            {error.includes('VITE_GEMINI_API_KEY') ? (
+        ) : briefError ? (
+          <div style={{ padding: '11px 13px' }}>
+            {briefError.includes('VITE_GEMINI_API_KEY') ? (
               <div style={{ fontSize: 10, color: 'rgba(255,184,0,0.85)', lineHeight: 1.5 }}>
-                ⚠️ Add your <code style={{ background: 'rgba(255,255,255,0.05)', padding: '0 3px', borderRadius: 3 }}>VITE_GEMINI_API_KEY</code> to <code style={{ background: 'rgba(255,255,255,0.05)', padding: '0 3px', borderRadius: 3 }}>.env</code> and restart the dev server.
+                ⚠️ Add your <code style={{ background: 'rgba(255,255,255,0.05)', padding: '0 3px', borderRadius: 3 }}>VITE_GEMINI_API_KEY</code> to <code style={{ background: 'rgba(255,255,255,0.05)', padding: '0 3px', borderRadius: 3 }}>.env</code> and restart.
               </div>
             ) : (
-              <div style={{ fontSize: 10, color: '#F43F5E', lineHeight: 1.5 }}>⚠️ {error}</div>
+              <div style={{ fontSize: 10, color: '#F43F5E', lineHeight: 1.5 }}>⚠️ {briefError}</div>
             )}
           </div>
-        ) : result ? (
-          <div style={{ padding: '11px 14px 13px' }}>
-            {/* Summary text */}
-            <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.78)', lineHeight: 1.6, margin: '0 0 10px', fontWeight: 500 }}>
-              {result.summary}
-            </p>
-
-            {/* Theme tags */}
-            {result.themes?.length > 0 && (
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginBottom: 9 }}>
-                {result.themes.map((t, i) => {
+        ) : brief ? (
+          <div style={{ padding: '11px 13px 10px' }}>
+            <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.8)', lineHeight: 1.6, margin: '0 0 8px', fontWeight: 500 }}>{brief.summary}</p>
+            {brief.themes?.length > 0 && (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 8 }}>
+                {brief.themes.map((t, i) => {
                   const s = SENTIMENT_STYLE[t.sentiment] || SENTIMENT_STYLE.neutral;
                   return (
-                    <span key={i} style={{
-                      display: 'inline-flex', alignItems: 'center', gap: 4,
-                      fontSize: 10, fontWeight: 700,
-                      color: s.color, background: s.bg, border: `1px solid ${s.border}`,
-                      padding: '2px 8px', borderRadius: 100,
-                    }}>
+                    <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 9, fontWeight: 700, color: s.color, background: s.bg, border: `1px solid ${s.border}`, padding: '2px 7px', borderRadius: 100 }}>
                       <span>{t.emoji}</span>{t.label}
                     </span>
                   );
                 })}
               </div>
             )}
-
-            {/* Top risk */}
-            {result.topRisk && (
-              <div style={{
-                display: 'flex', gap: 7, padding: '7px 9px',
-                background: 'rgba(244,63,94,0.06)', border: '1px solid rgba(244,63,94,0.15)',
-                borderRadius: 8,
-              }}>
-                <span style={{ fontSize: 10, flexShrink: 0 }}>⚠️</span>
-                <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.55)', lineHeight: 1.5 }}>
-                  <strong style={{ color: '#F43F5E', fontWeight: 700 }}>Top Risk: </strong>
-                  {result.topRisk}
+            {brief.topRisk && (
+              <div style={{ display: 'flex', gap: 6, padding: '6px 8px', background: 'rgba(244,63,94,0.06)', border: '1px solid rgba(244,63,94,0.14)', borderRadius: 7 }}>
+                <span style={{ fontSize: 9, flexShrink: 0, marginTop: 1 }}>⚠️</span>
+                <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', lineHeight: 1.5 }}>
+                  <strong style={{ color: '#F43F5E', fontWeight: 700 }}>Top Risk: </strong>{brief.topRisk}
                 </span>
               </div>
             )}
-
-            {/* Timestamp */}
-            {result.generatedAt && (
-              <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.2)', marginTop: 8, textAlign: 'right' }}>
-                Generated {new Date(result.generatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            {brief.generatedAt && (
+              <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.18)', marginTop: 6, textAlign: 'right' }}>
+                Generated {new Date(brief.generatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </div>
             )}
           </div>
         ) : null}
+
+        {/* ── Chat history ────────────────────────────────────────────── */}
+        {hasChatHistory && (
+          <div ref={scrollRef} style={{ maxHeight: 260, overflowY: 'auto', borderTop: '1px solid rgba(255,255,255,0.05)', padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {messages.map((msg, i) => {
+              const isUser = msg.role === 'user';
+              return (
+                <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: isUser ? 'flex-end' : 'flex-start' }}>
+                  <span style={{ fontSize: 8, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: isUser ? 'rgba(99,102,241,0.6)' : 'rgba(199,189,255,0.4)', marginBottom: 3 }}>
+                    {isUser ? 'You' : '✦ Colisto AI'}
+                  </span>
+                  <div style={{
+                    maxWidth: '90%', padding: '8px 11px',
+                    borderRadius: isUser ? '12px 12px 4px 12px' : '12px 12px 12px 4px',
+                    background: isUser ? 'rgba(99,102,241,0.18)' : 'rgba(255,255,255,0.04)',
+                    border: `1px solid ${isUser ? 'rgba(99,102,241,0.3)' : 'rgba(255,255,255,0.07)'}`,
+                    fontSize: 11, color: 'rgba(255,255,255,0.88)', lineHeight: 1.55,
+                    whiteSpace: 'pre-wrap', wordBreak: 'break-word',
+                  }}>{msg.text}</div>
+                </div>
+              );
+            })}
+            {/* Typing indicator */}
+            {chatLoading && (
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                <span style={{ fontSize: 8, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(199,189,255,0.4)', marginBottom: 3 }}>✦ Colisto AI</span>
+                <div style={{ padding: '8px 13px', borderRadius: '12px 12px 12px 4px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', display: 'flex', gap: 5, alignItems: 'center' }}>
+                  {[0, 0.18, 0.36].map((delay, idx) => (
+                    <div key={idx} style={{ width: 5, height: 5, borderRadius: '50%', background: 'rgba(99,102,241,0.7)', animation: `gemini-dot-bounce 0.8s ${delay}s ease-in-out infinite` }} />
+                  ))}
+                </div>
+              </div>
+            )}
+
+          </div>
+        )}
+
+        {/* ── Follow-up suggestion chips ───────────────────────────────── */}
+        <div style={{ padding: '8px 12px 6px', display: 'flex', flexWrap: 'wrap', gap: 5, borderTop: hasChatHistory ? 'none' : '1px solid rgba(255,255,255,0.05)' }}>
+          {FOLLOW_UP_CHIPS.map((chip) => (
+            <button
+              key={chip.label}
+              onClick={() => sendMessage(chip.label)}
+              disabled={chatLoading}
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: 4,
+                fontSize: 10, fontWeight: 600, color: 'rgba(199,189,255,0.75)',
+                background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.2)',
+                padding: '3px 9px', borderRadius: 100, cursor: chatLoading ? 'not-allowed' : 'pointer',
+                transition: 'all 0.15s ease', whiteSpace: 'nowrap', opacity: chatLoading ? 0.5 : 1,
+              }}
+              onMouseEnter={e => { if (!chatLoading) { const el = e.currentTarget as HTMLElement; el.style.background = 'rgba(99,102,241,0.2)'; el.style.borderColor = 'rgba(99,102,241,0.5)'; el.style.color = '#fff'; } }}
+              onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.background = 'rgba(99,102,241,0.08)'; el.style.borderColor = 'rgba(99,102,241,0.2)'; el.style.color = 'rgba(199,189,255,0.75)'; }}
+            >
+              <span style={{ fontSize: 11 }}>{chip.icon}</span>{chip.label}
+            </button>
+          ))}
+        </div>
+
+        {/* ── Freeform input ───────────────────────────────────────────── */}
+        <div style={{ padding: '0 10px 10px', display: 'flex', gap: 7, alignItems: 'center' }}>
+          <input
+            ref={inputRef}
+            value={inputText}
+            onChange={e => setInputText(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Ask your financial advisor…"
+            disabled={chatLoading}
+            style={{
+              flex: 1, height: 32,
+              background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(99,102,241,0.18)',
+              borderRadius: 8, padding: '0 10px', fontSize: 11, color: '#fff',
+              outline: 'none', fontFamily: 'Inter, sans-serif', transition: 'border-color 0.15s',
+            }}
+            onFocus={e => (e.target as HTMLInputElement).style.borderColor = 'rgba(99,102,241,0.5)'}
+            onBlur={e => (e.target as HTMLInputElement).style.borderColor = 'rgba(99,102,241,0.18)'}
+          />
+          <button
+            onClick={() => sendMessage(inputText)}
+            disabled={chatLoading || !inputText.trim()}
+            style={{
+              width: 32, height: 32, borderRadius: 8, flexShrink: 0, fontSize: 14,
+              background: chatLoading || !inputText.trim() ? 'rgba(99,102,241,0.06)' : 'rgba(99,102,241,0.75)',
+              border: '1px solid rgba(99,102,241,0.3)',
+              color: chatLoading || !inputText.trim() ? 'rgba(255,255,255,0.2)' : '#fff',
+              cursor: chatLoading || !inputText.trim() ? 'not-allowed' : 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              transition: 'all 0.15s',
+            }}
+          >↑</button>
+        </div>
+
       </div>
+      <style>{`
+        @keyframes gemini-dot-bounce {
+          0%, 80%, 100% { transform: scale(0.7); opacity: 0.4; }
+          40%            { transform: scale(1.15); opacity: 1; }
+        }
+      `}</style>
     </div>
   );
 }
