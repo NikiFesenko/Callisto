@@ -2,13 +2,19 @@
  * geminiSummary.ts
  *
  * Two capabilities:
- * 1. fetchGeminiSummary  — daily market brief (cached per-day in localStorage)
- * 2. callGeminiChat      — multi-turn financial advisor chat
+ * 1. fetchGeminiSummary  -- daily market brief (cached per-day in localStorage)
+ * 2. callGeminiChat      -- multi-turn financial advisor chat
  */
 
 const CACHE_KEY = 'gemini_daily_brief';
 const MODEL = 'gemini-2.0-flash';
 const NEWS_RSS_QUERY = 'stock market OR geopolitical OR oil price OR Fed OR war OR sanctions OR tariffs';
+
+/**
+ * How many recent user+model turn pairs to keep in chat history.
+ * Older turns are dropped to cap token cost per request.
+ */
+const MAX_HISTORY_TURNS = 6;
 
 export interface GeminiResult {
   summary: string;
@@ -27,7 +33,44 @@ interface CacheEntry {
   data: GeminiResult;
 }
 
-// ── Helpers ────────────────────────────────────────────────────────────────
+// -- Helpers ------------------------------------------------------------------
+
+/** Parse a Gemini HTTP error response into a clean, user-facing message. */
+async function parseGeminiError(res: Response): Promise<Error> {
+  if (res.status === 429) {
+    return new Error(
+      "Rate limit reached -- you've hit the free-tier quota. " +
+      'Wait a moment and try again, or upgrade your Gemini API plan at ai.google.dev.'
+    );
+  }
+  try {
+    const errJson = await res.json();
+    const msg = errJson?.error?.message;
+    if (msg) return new Error(msg);
+  } catch (_) {
+    // fall through to status-based message
+  }
+  return new Error(`Gemini API error (${res.status}) -- please try again.`);
+}
+
+/**
+ * Fetch wrapper with automatic exponential-backoff retry on 429.
+ * Waits 2s -> 4s -> 8s before giving up (3 retries total).
+ */
+async function fetchWithRetry(
+  url: string,
+  init: RequestInit,
+  maxRetries = 3,
+): Promise<Response> {
+  let delay = 2000;
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    const res = await fetch(url, init);
+    if (res.status !== 429 || attempt === maxRetries) return res;
+    await new Promise(r => setTimeout(r, delay));
+    delay *= 2;
+  }
+  return fetch(url, init); // unreachable but satisfies TS
+}
 
 function todayStr() {
   return new Date().toISOString().slice(0, 10);
@@ -37,7 +80,7 @@ function getApiKey(): string {
   const rawKey = (import.meta as any).env?.VITE_GEMINI_API_KEY as string | undefined;
   const key = rawKey ? rawKey.trim() : '';
   if (!key || key === 'YOUR_GEMINI_API_KEY_HERE') {
-    throw new Error('VITE_GEMINI_API_KEY not set — add it to your .env file');
+    throw new Error('VITE_GEMINI_API_KEY not set -- add it to your .env file');
   }
   return key;
 }
@@ -59,7 +102,7 @@ function writeCache(data: GeminiResult) {
   } catch (_) {}
 }
 
-// ── Fetch headlines ────────────────────────────────────────────────────────
+// -- Fetch headlines ----------------------------------------------------------
 
 async function fetchHeadlines(): Promise<string[]> {
   const rssUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(NEWS_RSS_QUERY)}&hl=en-US&gl=US&ceid=US:en`;
@@ -75,10 +118,10 @@ async function fetchHeadlines(): Promise<string[]> {
   }).filter(Boolean);
 }
 
-// ── Daily brief (structured JSON output) ──────────────────────────────────
+// -- Daily brief (structured JSON output) ------------------------------------
 
 async function callGemini(headlines: string[], apiKey: string): Promise<GeminiResult> {
-  const prompt = `You are a senior macro analyst. Below are today's top financial and geopolitical news headlines.
+  const prompt = `Below are today's top financial and geopolitical news headlines.
 
 Headlines:
 ${headlines.map((h, i) => `${i + 1}. ${h}`).join('\n')}
@@ -87,7 +130,7 @@ Respond with a JSON object (no markdown, no code fences) with exactly this shape
 {
   "summary": "<2-3 sentence plain-English overview of what's moving markets today>",
   "themes": [
-    { "label": "<short theme name, max 3 words>", "sentiment": "bullish" | "bearish" | "neutral", "emoji": "<single emoji>" },
+    { "label": "<short theme name, max 3 words>", "sentiment": "bullish|bearish|neutral", "emoji": "<single emoji>" },
     { "label": "...", "sentiment": "...", "emoji": "..." },
     { "label": "...", "sentiment": "...", "emoji": "..." }
   ],
@@ -97,10 +140,14 @@ Respond with a JSON object (no markdown, no code fences) with exactly this shape
 
   const url = `/api/gemini/v1beta/models/${MODEL}:generateContent?key=${apiKey}`;
   const body = {
+    // system_instruction is billed separately and not counted in per-turn tokens
+    system_instruction: {
+      parts: [{ text: 'You are a senior macro analyst. Reply only with the requested JSON object, no extra text.' }],
+    },
     contents: [{ parts: [{ text: prompt }] }],
     generationConfig: {
       temperature: 0.3,
-      maxOutputTokens: 4096,
+      maxOutputTokens: 512,  // brief JSON never exceeds ~300 tokens
       responseMimeType: 'application/json',
       responseSchema: {
         type: 'OBJECT',
@@ -113,118 +160,92 @@ Respond with a JSON object (no markdown, no code fences) with exactly this shape
               properties: {
                 label: { type: 'STRING' },
                 sentiment: { type: 'STRING', enum: ['bullish', 'bearish', 'neutral'] },
-                emoji: { type: 'STRING' }
+                emoji: { type: 'STRING' },
               },
-              required: ['label', 'sentiment', 'emoji']
-            }
+              required: ['label', 'sentiment', 'emoji'],
+            },
           },
           topRisk: { type: 'STRING' },
-          generatedAt: { type: 'STRING' }
+          generatedAt: { type: 'STRING' },
         },
-        required: ['summary', 'themes', 'topRisk', 'generatedAt']
-      }
+        required: ['summary', 'themes', 'topRisk', 'generatedAt'],
+      },
     },
   };
 
-  const res = await fetch(url, {
+  const res = await fetchWithRetry(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   });
 
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`Gemini ${res.status}: ${err}`);
-  }
+  if (!res.ok) throw await parseGeminiError(res);
 
   const json = await res.json();
   const text: string = json.candidates?.[0]?.content?.parts?.[0]?.text || '';
   return JSON.parse(text.trim()) as GeminiResult;
 }
 
-// ── Multi-turn financial advisor chat ──────────────────────────────────────
+// -- Multi-turn financial advisor chat ----------------------------------------
 
-const ADVISOR_SYSTEM_INSTRUCTION = `You are Colisto AI, an elite financial advisor and macro strategist embedded in a professional trading terminal. You have deep expertise in:
-- Global equity markets, indices, and sector rotation
-- Fixed income, rates, and central bank policy
-- Commodities, FX, and crypto markets
-- Geopolitical risk and its market impact
-- Portfolio construction and risk management
-
-Your communication style:
-- Concise but substantive — no filler words
-- Data-driven — cite specific levels, percentages, or historical parallels when relevant
-- Balanced — present bull and bear cases fairly
-- Actionable — end with a clear takeaway or watchpoint
-- Never give personalized investment advice or guarantee returns; frame all views as analysis
-
-Format your responses in clean plain text. Use short paragraphs. When listing items, use a simple dash (—) as bullet. Keep responses under 200 words unless the question genuinely requires depth.`;
+const ADVISOR_SYSTEM_INSTRUCTION =
+  'You are Colisto AI, an elite financial advisor and macro strategist embedded in a professional trading terminal. ' +
+  'You have deep expertise in: global equity markets and sector rotation, fixed income and central bank policy, ' +
+  'commodities, FX, and crypto markets, geopolitical risk and its market impact, portfolio construction and risk management. ' +
+  'Communication style: concise but substantive, data-driven (cite specific levels, percentages, or historical parallels), ' +
+  'balanced (present bull and bear cases), actionable (end with a clear takeaway or watchpoint). ' +
+  'Never give personalized investment advice or guarantee returns; frame all views as analysis. ' +
+  'Format in clean plain text, short paragraphs, dash bullet points. Keep responses under 200 words unless depth is required.';
 
 /**
- * Sends a multi-turn conversation to Gemini and returns the model's reply text.
- * @param history  Full conversation history (user + model turns so far)
+ * Sends a multi-turn conversation to Gemini and returns the model reply text.
+ * @param history      Full conversation history (user + model turns so far)
  * @param userMessage  The new user message to append
  */
 export async function callGeminiChat(
   history: ChatMessage[],
-  userMessage: string
+  userMessage: string,
 ): Promise<string> {
   const apiKey = getApiKey();
   const url = `/api/gemini/v1beta/models/${MODEL}:generateContent?key=${apiKey}`;
 
-  // Inject the system persona as the very first user/model exchange so it
-  // is always honoured even if the endpoint ignores system_instruction.
-  const systemTurn = [
-    { role: 'user',  parts: [{ text: `You are Colisto AI. Instructions: ${ADVISOR_SYSTEM_INSTRUCTION}\n\nAcknowledge with a single word.` }] },
-    { role: 'model', parts: [{ text: 'Understood.' }] },
-  ];
-
-  // Build the rest of the contents from existing history + new message.
-  // Ensure history alternates user/model starting with user.
-  const historyContents = history.map(m => ({
-    role: m.role,
-    parts: [{ text: m.text }],
-  }));
+  // Trim history to the most recent N turn-pairs to cap token spend.
+  // Each "pair" = one user turn + one model turn = 2 messages.
+  const trimmedHistory = history.slice(-(MAX_HISTORY_TURNS * 2));
 
   const contents = [
-    ...systemTurn,
-    ...historyContents,
+    ...trimmedHistory.map(m => ({ role: m.role, parts: [{ text: m.text }] })),
     { role: 'user' as const, parts: [{ text: userMessage }] },
   ];
 
   const body = {
+    // system_instruction is sent once and NOT counted in per-turn user tokens,
+    // saving ~400 tokens on every single chat request.
+    system_instruction: {
+      parts: [{ text: ADVISOR_SYSTEM_INSTRUCTION }],
+    },
     contents,
     generationConfig: {
       temperature: 0.55,
-      maxOutputTokens: 1024,
+      maxOutputTokens: 512,  // concise replies; raise if longer answers are needed
     },
   };
 
-  const res = await fetch(url, {
+  const res = await fetchWithRetry(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   });
 
-  if (!res.ok) {
-    const errText = await res.text();
-    // Try to extract a human-readable message from Gemini's error JSON
-    try {
-      const errJson = JSON.parse(errText);
-      const msg = errJson?.error?.message || errText;
-      throw new Error(msg);
-    } catch {
-      throw new Error(`API error ${res.status}: ${errText.slice(0, 120)}`);
-    }
-  }
+  if (!res.ok) throw await parseGeminiError(res);
 
   const json = await res.json();
   const text: string = json.candidates?.[0]?.content?.parts?.[0]?.text || '';
-  if (!text) throw new Error('Empty response from Gemini — try again');
+  if (!text) throw new Error('Empty response from Gemini -- try again');
   return text.trim();
 }
 
-// ── Public API ─────────────────────────────────────────────────────────────
+// -- Public API ---------------------------------------------------------------
 
 export async function fetchGeminiSummary(forceRefresh = false): Promise<GeminiResult> {
   if (!forceRefresh) {
