@@ -17,6 +17,7 @@ import { useWalletStore } from '@/src/store/useWalletStore';
 import { useOpenWalletModal } from '@/src/components/wallet/useOpenWalletModal';
 import { truncateAddress } from '@/src/lib/formatters';
 import { useThemeStore } from '@/src/store/useThemeStore';
+import { useAuthStore } from '@/src/store/useAuthStore';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -220,10 +221,16 @@ function WebNavBar() {
 
 function Layout() {
   const { theme } = useThemeStore();
+  const { restoreSession } = useAuthStore();
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
   }, [theme]);
+
+  // Restore auth session from stored JWT on every app load
+  useEffect(() => {
+    restoreSession();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="colisto-layout-bg" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>

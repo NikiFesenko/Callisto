@@ -31,6 +31,19 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api\/gemini/, ''),
       },
+      // ── Colisto Express API server (auth + portfolio + health) ──────────────
+      '/api/auth': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+      },
+      '/api/portfolio': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+      },
+      '/api/health': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+      },
     },
   },
   optimizeDeps: {
