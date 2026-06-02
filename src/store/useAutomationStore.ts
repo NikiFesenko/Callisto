@@ -1,6 +1,5 @@
 import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { savePreferences } from '../api/walletProfile';
 
 export type MacroIndicator = 'CPI' | 'CORE_CPI' | 'FED_FUNDS' | 'M2' | 'GDP' | 'UNEMPLOYMENT';
 export type ComparisonOperator = '>' | '<' | '>=' | '<=' | '==';
@@ -18,8 +17,8 @@ export interface AutomationAction {
   outputMint: string;
   inputSymbol: string;
   outputSymbol: string;
-  amount: number; // in input token's smallest unit
-  slippageBps: number; // hardcoded max 100 bps
+  amount: number;
+  slippageBps: number;
 }
 
 export interface Automation {
@@ -37,74 +36,95 @@ export interface Automation {
 
 interface AutomationState {
   automations: Automation[];
+  _walletAddress: string | null;
+
   addAutomation: (automation: Omit<Automation, 'id' | 'createdAt' | 'lastTriggered' | 'lastExecutedTxId' | 'status'>) => void;
   removeAutomation: (id: string) => void;
   toggleAutomation: (id: string) => void;
   updateStatus: (id: string, status: AutomationStatus, txId?: string) => void;
+
+  /** Called by useWalletStore when a wallet connects — hydrates from DB */
+  hydrateFromWallet: (address: string, automations: Automation[]) => void;
+  /** Called on wallet disconnect — clear all automations */
+  clearForWallet: () => void;
 }
 
-export const useAutomationStore = create<AutomationState>()(
-  persist(
-    (set) => ({
-      automations: [],
+let _autoSyncTimer: ReturnType<typeof setTimeout> | null = null;
+function debouncedSyncAutomations(address: string, automations: Automation[], delay = 800) {
+  if (_autoSyncTimer) clearTimeout(_autoSyncTimer);
+  _autoSyncTimer = setTimeout(() => {
+    savePreferences(address, { automations } as any).catch((err) =>
+      console.warn('[AutomationStore] sync failed:', err)
+    );
+  }, delay);
+}
 
-      addAutomation: (automation) =>
-        set((state) => ({
-          automations: [
-            ...state.automations,
-            {
-              ...automation,
-              id: `auto_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-              createdAt: new Date().toISOString(),
-              lastTriggered: null,
-              lastExecutedTxId: null,
-              status: 'monitoring' as AutomationStatus,
-            },
-          ],
-        })),
+export const useAutomationStore = create<AutomationState>()((set, get) => ({
+  automations: [],
+  _walletAddress: null,
 
-      removeAutomation: (id) =>
-        set((state) => ({
-          automations: state.automations.filter((a) => a.id !== id),
-        })),
-
-      toggleAutomation: (id) =>
-        set((state) => ({
-          automations: state.automations.map((a) =>
-            a.id === id
-              ? {
-                  ...a,
-                  enabled: !a.enabled,
-                  status: (!a.enabled ? 'monitoring' : 'idle') as AutomationStatus,
-                }
-              : a
-          ),
-        })),
-
-      updateStatus: (id, status, txId) =>
-        set((state) => ({
-          automations: state.automations.map((a) =>
-            a.id === id
-              ? {
-                  ...a,
-                  status,
-                  lastTriggered: status === 'triggered' || status === 'executed' ? new Date().toISOString() : a.lastTriggered,
-                  lastExecutedTxId: txId || a.lastExecutedTxId,
-                }
-              : a
-          ),
-        })),
+  addAutomation: (automation) =>
+    set((state) => {
+      const next: Automation[] = [
+        ...state.automations,
+        {
+          ...automation,
+          id: `auto_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          createdAt: new Date().toISOString(),
+          lastTriggered: null,
+          lastExecutedTxId: null,
+          status: 'monitoring' as AutomationStatus,
+        },
+      ];
+      if (state._walletAddress) debouncedSyncAutomations(state._walletAddress, next);
+      return { automations: next };
     }),
-    {
-      name: 'colisto-automations',
-      storage: createJSONStorage(() => {
-        // Use AsyncStorage for React Native, fallback to localStorage for web
-        try {
-          return AsyncStorage;
-        } catch {
-          return localStorage as any;
-        }
-      }),
-    }
-  )
-);
+
+  removeAutomation: (id) =>
+    set((state) => {
+      const next = state.automations.filter((a) => a.id !== id);
+      if (state._walletAddress) debouncedSyncAutomations(state._walletAddress, next);
+      return { automations: next };
+    }),
+
+  toggleAutomation: (id) =>
+    set((state) => {
+      const next = state.automations.map((a) =>
+        a.id === id
+          ? {
+              ...a,
+              enabled: !a.enabled,
+              status: (!a.enabled ? 'monitoring' : 'idle') as AutomationStatus,
+            }
+          : a
+      );
+      if (state._walletAddress) debouncedSyncAutomations(state._walletAddress, next);
+      return { automations: next };
+    }),
+
+  updateStatus: (id, status, txId) =>
+    set((state) => ({
+      automations: state.automations.map((a) =>
+        a.id === id
+          ? {
+              ...a,
+              status,
+              lastTriggered:
+                status === 'triggered' || status === 'executed'
+                  ? new Date().toISOString()
+                  : a.lastTriggered,
+              lastExecutedTxId: txId || a.lastExecutedTxId,
+            }
+          : a
+      ),
+    })),
+
+  hydrateFromWallet: (address, automations) => {
+    set({ _walletAddress: address, automations });
+  },
+
+  clearForWallet: () => {
+    if (_autoSyncTimer) clearTimeout(_autoSyncTimer);
+    set({ automations: [], _walletAddress: null });
+  },
+}));

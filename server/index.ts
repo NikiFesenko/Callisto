@@ -6,6 +6,7 @@ import path from 'path';
 import { initSchema } from './db';
 import authRouter from './routes/auth';
 import portfolioRouter from './routes/portfolio';
+import walletProfileRouter from './routes/walletProfile';
 
 // Load .env from project root
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
@@ -34,6 +35,7 @@ app.get('/api/health', (_req, res) => {
 // ── Routes ─────────────────────────────────────────────────────────────────────
 app.use('/api/auth', authRouter);
 app.use('/api/portfolio', portfolioRouter);
+app.use('/api/wallet', walletProfileRouter);
 
 // ── 404 fallback ───────────────────────────────────────────────────────────────
 app.use((_req, res) => {

@@ -33,3 +33,14 @@ CREATE TABLE IF NOT EXISTS portfolio_trades (
   INDEX idx_symbol (symbol),
   INDEX idx_traded_at (traded_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ── Wallet Profiles ───────────────────────────────────────────────────────────
+-- Wallet address IS the identity — no email/password needed.
+-- Auto-created on first wallet connect, synced on every preference change.
+CREATE TABLE IF NOT EXISTS wallet_profiles (
+  wallet_address  VARCHAR(255) NOT NULL PRIMARY KEY,
+  watchlist       JSON         NOT NULL,
+  preferences     JSON         NOT NULL,
+  created_at      TIMESTAMP    DEFAULT CURRENT_TIMESTAMP,
+  updated_at      TIMESTAMP    DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

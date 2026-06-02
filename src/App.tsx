@@ -223,14 +223,16 @@ function Layout() {
   const { theme } = useThemeStore();
   const { restoreSession } = useAuthStore();
 
+  // Apply theme on initial load (before any wallet connects)
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
   }, [theme]);
 
-  // Restore auth session from stored JWT on every app load
+  // Restore email/password auth session from stored JWT on every app load
   useEffect(() => {
     restoreSession();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
 
   return (
     <div className="colisto-layout-bg" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
