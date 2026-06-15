@@ -10,6 +10,11 @@ router.use(authenticateToken);
 // ── GET /api/portfolio/trades ─────────────────────────────────────────────────
 // Returns all trades for the authenticated user, newest first
 router.get('/trades', async (req: AuthRequest, res: Response): Promise<void> => {
+  if (!req.userId) {
+    res.status(401).json({ error: 'Unauthorized: Missing user ID' });
+    return;
+  }
+
   try {
     const [rows] = await pool.execute<any[]>(
       `SELECT
@@ -54,6 +59,11 @@ router.post('/trades', async (req: AuthRequest, res: Response): Promise<void> =>
     return;
   }
 
+  if (!req.userId) {
+    res.status(401).json({ error: 'Unauthorized: Missing user ID' });
+    return;
+  }
+
   try {
     const tradeDate = traded_at ? new Date(traded_at) : new Date();
 
@@ -89,6 +99,11 @@ router.delete('/trades/:id', async (req: AuthRequest, res: Response): Promise<vo
     return;
   }
 
+  if (!req.userId) {
+    res.status(401).json({ error: 'Unauthorized: Missing user ID' });
+    return;
+  }
+
   try {
     const [result] = await pool.execute<any>(
       'DELETE FROM portfolio_trades WHERE id = ? AND user_id = ?',
@@ -110,6 +125,11 @@ router.delete('/trades/:id', async (req: AuthRequest, res: Response): Promise<vo
 // ── GET /api/portfolio/summary ────────────────────────────────────────────────
 // Aggregate P&L summary per symbol
 router.get('/summary', async (req: AuthRequest, res: Response): Promise<void> => {
+  if (!req.userId) {
+    res.status(401).json({ error: 'Unauthorized: Missing user ID' });
+    return;
+  }
+
   try {
     const [rows] = await pool.execute<any[]>(
       `SELECT

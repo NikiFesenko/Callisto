@@ -4,6 +4,7 @@ import { getProfile } from '../api/walletProfile';
 import { useWatchlistStore } from './useWatchlistStore';
 import { useThemeStore } from './useThemeStore';
 import { useAutomationStore } from './useAutomationStore';
+import { useAuthStore } from './useAuthStore';
 
 /**
  * Wallet store that bridges the @solana/wallet-adapter-react hooks
@@ -96,6 +97,7 @@ export const useWalletStore = create<WalletState>((set, get) => ({
   error: null,
 
   openWalletModal: () => {
+    console.log('[WalletStore] openWalletModal called. Current _modalOpener is:', typeof _modalOpener);
     if (typeof _modalOpener === 'function') {
       _modalOpener();
     } else if (typeof window !== 'undefined') {
@@ -108,6 +110,7 @@ export const useWalletStore = create<WalletState>((set, get) => ({
       _disconnecter();
     }
     clearProfileStores();
+    useAuthStore.getState().logout();
     set({
       publicKey: null,
       connected: false,
@@ -133,10 +136,18 @@ export const useWalletStore = create<WalletState>((set, get) => ({
       provider: state.walletName?.toLowerCase() || null,
     });
 
-    // Wallet just connected (or switched) — hydrate stores from DB
+    // Wallet just connected (or switched) — login and hydrate stores from DB
     if (state.connected && state.publicKey && state.publicKey !== _lastHydratedKey) {
       _lastHydratedKey = state.publicKey;
-      hydrateProfileStores(state.publicKey);
+      useAuthStore.getState().loginWithWallet(state.publicKey)
+        .then(() => {
+          hydrateProfileStores(state.publicKey!);
+        })
+        .catch((err) => {
+          console.error('[WalletStore] Failed to login with wallet:', err);
+          set({ error: 'Wallet authentication failed. Please try reconnecting.' });
+          get().disconnect();
+        });
     }
 
     // Wallet just disconnected — clear stores
@@ -146,6 +157,7 @@ export const useWalletStore = create<WalletState>((set, get) => ({
   },
 
   _setModalOpener: (opener) => {
+    console.log('[WalletStore] _setModalOpener called with value:', typeof opener);
     _modalOpener = opener;
   },
 

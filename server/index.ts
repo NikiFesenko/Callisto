@@ -4,9 +4,14 @@ import dotenv from 'dotenv';
 import path from 'path';
 
 import { initSchema } from './db';
+import { connectRedis, getCacheStats } from './redis';
 import authRouter from './routes/auth';
 import portfolioRouter from './routes/portfolio';
 import walletProfileRouter from './routes/walletProfile';
+import fredRouter from './routes/fred';
+import calendarRouter from './routes/calendar';
+import marketRouter from './routes/market';
+import newsRouter from './routes/news';
 
 // Load .env from project root
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
@@ -32,10 +37,21 @@ app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+// ── Cache stats (dev/ops debug endpoint) ───────────────────────────────────────
+app.get('/api/cache/stats', (_req, res) => {
+  res.json(getCacheStats());
+});
+
 // ── Routes ─────────────────────────────────────────────────────────────────────
+// Auth & user data
 app.use('/api/auth', authRouter);
 app.use('/api/portfolio', portfolioRouter);
 app.use('/api/wallet', walletProfileRouter);
+// External data proxies
+app.use('/api/fred',     fredRouter);      // FRED macro data
+app.use('/api/calendar', calendarRouter);  // Finnhub economic calendar
+app.use('/api/market',   marketRouter);    // CoinGecko prices + charts
+app.use('/api/news',     newsRouter);      // Crypto news
 
 // ── 404 fallback ───────────────────────────────────────────────────────────────
 app.use((_req, res) => {
@@ -54,9 +70,13 @@ async function bootstrap() {
     console.log('🔄  Applying database schema...');
     await initSchema();
 
+    console.log('🔄  Connecting to Redis...');
+    await connectRedis();
+
     app.listen(PORT, () => {
       console.log(`🚀  Colisto API server running on http://localhost:${PORT}`);
-      console.log(`    Health: http://localhost:${PORT}/api/health`);
+      console.log(`    Health:      http://localhost:${PORT}/api/health`);
+      console.log(`    Cache stats: http://localhost:${PORT}/api/cache/stats`);
     });
   } catch (err) {
     console.error('❌  Failed to start server:', err);

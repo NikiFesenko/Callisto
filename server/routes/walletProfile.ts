@@ -1,7 +1,11 @@
-import { Router, Request, Response } from 'express';
+import { Router, Response } from 'express';
 import pool from '../db';
+import { authenticateToken, AuthRequest } from '../middleware/auth';
 
 const router = Router();
+
+// Require authentication for all wallet profile routes
+router.use(authenticateToken);
 
 // ── Default profile values ─────────────────────────────────────────────────────
 const DEFAULT_WATCHLIST: string[] = [];
@@ -13,13 +17,35 @@ const DEFAULT_PREFERENCES = {
   automations: [] as unknown[],
 };
 
+// ── Helper to check if the authenticated user owns the wallet address ─────────
+async function verifyWalletOwnership(req: AuthRequest, address: string): Promise<boolean> {
+  if (!req.userId) return false;
+  try {
+    const [rows] = await pool.execute<any[]>(
+      'SELECT wallet_address FROM users WHERE id = ?',
+      [req.userId]
+    );
+    const user = rows[0];
+    return !!(user && user.wallet_address === address);
+  } catch (err) {
+    console.error('[verifyWalletOwnership]', err);
+    return false;
+  }
+}
+
 // ── GET /api/wallet/:address/profile ──────────────────────────────────────────
 // Returns the full profile for a wallet. Auto-creates one if it doesn't exist.
-router.get('/:address/profile', async (req: Request, res: Response): Promise<void> => {
+router.get('/:address/profile', async (req: AuthRequest, res: Response): Promise<void> => {
   const { address } = req.params;
 
   if (!address || address.length < 32) {
     res.status(400).json({ error: 'Invalid wallet address' });
+    return;
+  }
+
+  const isOwner = await verifyWalletOwnership(req, address);
+  if (!isOwner) {
+    res.status(403).json({ error: 'Unauthorized: Wallet address mismatch' });
     return;
   }
 
@@ -68,12 +94,18 @@ router.get('/:address/profile', async (req: Request, res: Response): Promise<voi
 
 // ── PUT /api/wallet/:address/watchlist ────────────────────────────────────────
 // Replace the full watchlist array for a wallet (upsert).
-router.put('/:address/watchlist', async (req: Request, res: Response): Promise<void> => {
+router.put('/:address/watchlist', async (req: AuthRequest, res: Response): Promise<void> => {
   const { address } = req.params;
   const { symbols } = req.body as { symbols?: string[] };
 
   if (!address) {
     res.status(400).json({ error: 'Invalid wallet address' });
+    return;
+  }
+
+  const isOwner = await verifyWalletOwnership(req, address);
+  if (!isOwner) {
+    res.status(403).json({ error: 'Unauthorized: Wallet address mismatch' });
     return;
   }
 
@@ -103,12 +135,18 @@ router.put('/:address/watchlist', async (req: Request, res: Response): Promise<v
 // ── PUT /api/wallet/:address/preferences ──────────────────────────────────────
 // Merge-update the preferences object for a wallet (upsert).
 // Only the provided keys are updated — others are preserved.
-router.put('/:address/preferences', async (req: Request, res: Response): Promise<void> => {
+router.put('/:address/preferences', async (req: AuthRequest, res: Response): Promise<void> => {
   const { address } = req.params;
   const updates = req.body as Partial<typeof DEFAULT_PREFERENCES>;
 
   if (!address) {
     res.status(400).json({ error: 'Invalid wallet address' });
+    return;
+  }
+
+  const isOwner = await verifyWalletOwnership(req, address);
+  if (!isOwner) {
+    res.status(403).json({ error: 'Unauthorized: Wallet address mismatch' });
     return;
   }
 

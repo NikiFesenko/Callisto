@@ -20,6 +20,23 @@ services:
       timeout: 5s
       retries: 5
 
+  redis:
+    image: redis:7-alpine
+    container_name: colisto_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - colisto_redis_data:/data
+    command: redis-server --save 60 1 --loglevel warning
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
 volumes:
   colisto_mysql_data:
+    driver: local
+  colisto_redis_data:
     driver: local

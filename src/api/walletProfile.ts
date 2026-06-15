@@ -21,8 +21,7 @@ export interface WalletProfile {
  */
 export async function getProfile(address: string): Promise<WalletProfile> {
   const data = await apiRequest<{ profile: WalletProfile }>(
-    `/wallet/${address}/profile`,
-    { skipAuth: true }
+    `/wallet/${address}/profile`
   );
   return data.profile;
 }
@@ -35,7 +34,6 @@ export async function saveWatchlist(address: string, symbols: string[]): Promise
   await apiRequest(`/wallet/${address}/watchlist`, {
     method: 'PUT',
     body: JSON.stringify({ symbols }),
-    skipAuth: true,
   });
 }
 
@@ -50,6 +48,5 @@ export async function savePreferences(
   await apiRequest(`/wallet/${address}/preferences`, {
     method: 'PUT',
     body: JSON.stringify(preferences),
-    skipAuth: true,
   });
 }

@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { User, login as apiLogin, register as apiRegister, getMe, logout as apiLogout, linkWallet } from '../api/auth';
+import { User, login as apiLogin, register as apiRegister, getMe, logout as apiLogout, linkWallet, loginWithWallet as apiLoginWithWallet } from '../api/auth';
 import { getToken } from '../api/client';
 
 interface AuthState {
@@ -14,6 +14,9 @@ interface AuthState {
 
   /** Log in with email + password */
   login: (email: string, password: string) => Promise<void>;
+
+  /** Log in/register with Solana wallet address */
+  loginWithWallet: (address: string) => Promise<void>;
 
   /** Restore session from stored token (call on app boot) */
   restoreSession: () => Promise<void>;
@@ -54,6 +57,17 @@ export const useAuthStore = create<AuthState>()(
           set({ user, token, isLoading: false });
         } catch (err: any) {
           set({ error: err.message || 'Login failed', isLoading: false });
+          throw err;
+        }
+      },
+
+      loginWithWallet: async (address: string) => {
+        set({ isLoading: true, error: null });
+        try {
+          const { user, token } = await apiLoginWithWallet(address);
+          set({ user, token, isLoading: false });
+        } catch (err: any) {
+          set({ error: err.message || 'Wallet login failed', isLoading: false });
           throw err;
         }
       },

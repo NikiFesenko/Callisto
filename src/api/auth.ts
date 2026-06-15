@@ -47,6 +47,17 @@ export async function linkWallet(wallet_address: string): Promise<{ success: boo
   });
 }
 
+/** Authenticate using a Solana wallet address */
+export async function loginWithWallet(wallet_address: string): Promise<AuthResponse> {
+  const data = await apiRequest<AuthResponse>('/auth/wallet-login', {
+    method: 'POST',
+    body: JSON.stringify({ wallet_address }),
+    skipAuth: true,
+  });
+  setToken(data.token);
+  return data;
+}
+
 /** Log out — removes the stored token */
 export function logout(): void {
   removeToken();

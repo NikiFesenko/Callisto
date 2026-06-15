@@ -48,6 +48,23 @@ export default defineConfig({
         target: 'http://localhost:3001',
         changeOrigin: true,
       },
+      // ── Data proxies (keys kept server-side) ─────────────────────────────
+      '/api/fred': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+      },
+      '/api/calendar': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+      },
+      '/api/market': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+      },
+      '/api/news': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+      },
     },
   },
   optimizeDeps: {

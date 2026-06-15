@@ -156,10 +156,13 @@ function WebWalletModal({ wallets, connected }: { wallets: any[]; connected: boo
   setVisibleRef.current = setVisible;
 
   useEffect(() => {
+    console.log('[WebWalletModal] Mounting and registering modal opener');
     useWalletStore.getState()._setModalOpener(() => {
+      console.log('[WebWalletModal] Opener triggered! Setting visible to true');
       setVisibleRef.current(true);
     });
     return () => {
+      console.log('[WebWalletModal] Unmounting and clearing modal opener');
       useWalletStore.getState()._setModalOpener(null);
     };
   }, []);

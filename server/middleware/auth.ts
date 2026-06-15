@@ -8,6 +8,7 @@ dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 export interface AuthRequest extends Request {
   userId?: number;
   userEmail?: string;
+  userWalletAddress?: string;
 }
 
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret_change_me';
@@ -26,9 +27,10 @@ export function authenticateToken(
   }
 
   try {
-    const payload = jwt.verify(token, JWT_SECRET) as { userId: number; email: string };
+    const payload = jwt.verify(token, JWT_SECRET) as { userId: number; email?: string; walletAddress?: string };
     req.userId = payload.userId;
     req.userEmail = payload.email;
+    req.userWalletAddress = payload.walletAddress;
     next();
   } catch {
     res.status(403).json({ error: 'Invalid or expired token' });

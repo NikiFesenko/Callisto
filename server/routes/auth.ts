@@ -114,6 +114,11 @@ router.post('/login', async (req: Request, res: Response): Promise<void> => {
 
 // ── GET /api/auth/me ──────────────────────────────────────────────────────────
 router.get('/me', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+  if (!req.userId) {
+    res.status(401).json({ error: 'Unauthorized: Missing user ID' });
+    return;
+  }
+
   try {
     const [rows] = await pool.execute<any[]>(
       'SELECT id, email, wallet_address, created_at FROM users WHERE id = ?',
@@ -134,6 +139,57 @@ router.get('/me', authenticateToken, async (req: AuthRequest, res: Response): Pr
   }
 });
 
+// ── POST /api/auth/wallet-login ───────────────────────────────────────────────
+// Authenticate or auto-register using a Solana wallet address
+router.post('/wallet-login', async (req: Request, res: Response): Promise<void> => {
+  const { wallet_address } = req.body as { wallet_address?: string };
+
+  if (!wallet_address || wallet_address.length < 32) {
+    res.status(400).json({ error: 'Valid wallet_address is required' });
+    return;
+  }
+
+  try {
+    // 1. Check if user already exists
+    const [rows] = await pool.execute<any[]>(
+      'SELECT id, email, wallet_address FROM users WHERE wallet_address = ?',
+      [wallet_address]
+    );
+
+    let user = rows[0];
+
+    // 2. If user doesn't exist, register them
+    if (!user) {
+      const [insertResult] = await pool.execute<any>(
+        'INSERT INTO users (wallet_address) VALUES (?)',
+        [wallet_address]
+      );
+      
+      const newUserId = insertResult.insertId;
+      user = { id: newUserId, email: null, wallet_address };
+    }
+
+    // 3. Sign JWT
+    const token = jwt.sign(
+      { userId: user.id, walletAddress: user.wallet_address },
+      JWT_SECRET,
+      { expiresIn: JWT_EXPIRES_IN } as any
+    );
+
+    res.json({
+      token,
+      user: {
+        id: user.id,
+        email: user.email,
+        wallet_address: user.wallet_address,
+      },
+    });
+  } catch (err) {
+    console.error('[wallet-login]', err);
+    res.status(500).json({ error: 'Wallet authentication failed' });
+  }
+});
+
 // ── PATCH /api/auth/wallet ────────────────────────────────────────────────────
 // Links a Solana wallet address to the authenticated user
 router.patch('/wallet', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
@@ -144,6 +200,11 @@ router.patch('/wallet', authenticateToken, async (req: AuthRequest, res: Respons
     return;
   }
 
+  if (!req.userId) {
+    res.status(401).json({ error: 'Unauthorized: Missing user ID' });
+    return;
+  }
+
   try {
     await pool.execute(
       'UPDATE users SET wallet_address = ? WHERE id = ?',
@@ -151,7 +212,11 @@ router.patch('/wallet', authenticateToken, async (req: AuthRequest, res: Respons
     );
 
     res.json({ success: true, wallet_address });
-  } catch (err) {
+  } catch (err: any) {
+    if (err.code === 'ER_DUP_ENTRY') {
+      res.status(409).json({ error: 'This wallet is already linked to another account' });
+      return;
+    }
     console.error('[wallet]', err);
     res.status(500).json({ error: 'Failed to update wallet address' });
   }
