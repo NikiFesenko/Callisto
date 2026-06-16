@@ -811,6 +811,19 @@ export default function MarketsScreen() {
   const [fetchedNews, setFetchedNews] = useState<Record<string, any[]>>({});
   const [isFetchingNews, setIsFetchingNews] = useState(false);
 
+  // ── Mobile detection ──────────────────────────────────────────────────────
+  const [isMobile, setIsMobile] = useState(false);
+  const [isBriefModalOpen, setIsBriefModalOpen] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   // Fetch real news when modal opens
   useEffect(() => {
     if (!isNewsModalOpen || !activeRegion) return;
@@ -997,7 +1010,11 @@ export default function MarketsScreen() {
             activeRegionRef.current = next;
             setActiveRegion(next);
             if (next && FLY_TARGETS[next]) {
-              globe.pointOfView(FLY_TARGETS[next], 1200);
+              const target = { ...FLY_TARGETS[next] };
+              if (window.innerWidth < 768) {
+                target.altitude = target.altitude * 1.35;
+              }
+              globe.pointOfView(target, 1200);
             }
           });
 
@@ -1029,7 +1046,7 @@ export default function MarketsScreen() {
         el.addEventListener('mousemove', onMouseMove);
         globe._onMouseMove = onMouseMove;
 
-        globe.pointOfView({ lat: 20, lng: 10, altitude: 2.4 }, 0);
+        globe.pointOfView({ lat: 20, lng: 10, altitude: window.innerWidth < 768 ? 3.2 : 2.4 }, 0);
 
         // ── Watchlist markers — will be updated after init ──────────────
         globe
@@ -1182,16 +1199,20 @@ export default function MarketsScreen() {
     setActiveRegion(next);
     activeRegionRef.current = next;
     if (next && FLY_TARGETS[next] && globeRef.current) {
-      globeRef.current.pointOfView(FLY_TARGETS[next], 1200);
+      const target = { ...FLY_TARGETS[next] };
+      if (window.innerWidth < 768) {
+        target.altitude = target.altitude * 1.35;
+      }
+      globeRef.current.pointOfView(target, 1200);
     } else if (!next && globeRef.current) {
-      globeRef.current.pointOfView({ lat: 20, lng: 10, altitude: 2.4 }, 1200);
+      globeRef.current.pointOfView({ lat: 20, lng: 10, altitude: window.innerWidth < 768 ? 3.2 : 2.4 }, 1200);
     }
   };
 
   const resetView = () => {
     setActiveRegion(null);
     activeRegionRef.current = null;
-    globeRef.current?.pointOfView({ lat: 20, lng: 10, altitude: 2.4 }, 1200);
+    globeRef.current?.pointOfView({ lat: 20, lng: 10, altitude: window.innerWidth < 768 ? 3.2 : 2.4 }, 1200);
   };
 
   // ── Update globe point markers whenever watchlist changes or globe loads ──
@@ -1284,46 +1305,76 @@ export default function MarketsScreen() {
 
       {/* Top-left title */}
       {!loading && (
-        <div style={{ position: 'absolute', top: 28, left: 32, zIndex: 10, pointerEvents: 'none' }}>
+        <div style={{
+          position: 'absolute',
+          top: isMobile ? 12 : 28,
+          left: isMobile ? 16 : 32,
+          zIndex: 10,
+          pointerEvents: 'none'
+        }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5 }}>
             <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#00D4FF', boxShadow: '0 0 10px #00D4FF', animation: 'live-pulse 2s ease-in-out infinite' }} />
             <span style={{ fontSize: 10, color: 'rgba(0,212,255,0.7)', fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' }}>
               Global Financial Map
             </span>
           </div>
-          <div style={{ fontSize: 28, fontWeight: 900, color: '#fff', letterSpacing: -0.5, lineHeight: 1.1 }}>
+          <div style={{ fontSize: isMobile ? 20 : 28, fontWeight: 900, color: '#fff', letterSpacing: -0.5, lineHeight: 1.1 }}>
             World Markets
           </div>
-          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', marginTop: 5 }}>
-            Drag to rotate · Scroll to zoom · Click a region to focus
-          </div>
-          {/* Hotspot legend */}
-          <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 5 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <div style={{ width: 10, height: 10, background: '#F43F5E', transform: 'rotate(45deg)', borderRadius: 1, boxShadow: '0 0 8px #F43F5E', flexShrink: 0 }} />
-              <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>Critical geopolitical event</span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <div style={{ width: 10, height: 10, background: '#FB923C', transform: 'rotate(45deg)', borderRadius: 1, boxShadow: '0 0 8px #FB923C', flexShrink: 0 }} />
-              <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>High-risk geopolitical event</span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#A1A1AA', boxShadow: '0 0 5px #A1A1AA', flexShrink: 0 }} />
-              <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>Watchlisted company HQ</span>
-            </div>
-          </div>
+          {!isMobile && (
+            <>
+              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', marginTop: 5 }}>
+                Drag to rotate · Scroll to zoom · Click a region to focus
+              </div>
+              {/* Hotspot legend */}
+              <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 5 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div style={{ width: 10, height: 10, background: '#F43F5E', transform: 'rotate(45deg)', borderRadius: 1, boxShadow: '0 0 8px #F43F5E', flexShrink: 0 }} />
+                  <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>Critical geopolitical event</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div style={{ width: 10, height: 10, background: '#FB923C', transform: 'rotate(45deg)', borderRadius: 1, boxShadow: '0 0 8px #FB923C', flexShrink: 0 }} />
+                  <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>High-risk geopolitical event</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#A1A1AA', boxShadow: '0 0 5px #A1A1AA', flexShrink: 0 }} />
+                  <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>Watchlisted company HQ</span>
+                </div>
+              </div>
+            </>
+          )}
         </div>
       )}
 
 
       {/* Right legend */}
       {!loading && (
-        <div style={{
-          position: 'absolute', top: '50%', right: 22,
-          transform: 'translateY(-50%)',
-          zIndex: 10,
-          display: 'flex', flexDirection: 'column', gap: 7,
-        }}>
+        <div 
+          className="market-legend-swiper"
+          style={{
+            position: 'absolute',
+            zIndex: 10,
+            display: 'flex',
+            ...(isMobile ? {
+              bottom: 16,
+              left: 16,
+              right: 16,
+              top: 'auto',
+              transform: 'none',
+              flexDirection: 'row',
+              gap: 8,
+              overflowX: 'auto',
+              paddingBottom: 8,
+              WebkitOverflowScrolling: 'touch',
+            } : {
+              top: '50%',
+              right: 22,
+              transform: 'translateY(-50%)',
+              flexDirection: 'column',
+              gap: 7,
+            })
+          }}
+        >
           {FINANCIAL_REGIONS.map(region => {
             const isActive = activeRegion === region.name;
             const { r, g, b } = hexToRgb(region.color);
@@ -1332,8 +1383,8 @@ export default function MarketsScreen() {
                 key={region.name}
                 onClick={() => flyToRegion(region.name)}
                 style={{
-                  display: 'flex', alignItems: 'center', gap: 10,
-                  padding: '8px 14px',
+                  display: 'flex', alignItems: 'center', gap: isMobile ? 6 : 10,
+                  padding: isMobile ? '6px 12px' : '8px 14px',
                   borderRadius: 10,
                   background: isActive ? `rgba(${r},${g},${b},0.16)` : 'rgba(3,8,22,0.80)',
                   border: `1px solid ${isActive ? region.color : 'rgba(255,255,255,0.08)'}`,
@@ -1342,7 +1393,8 @@ export default function MarketsScreen() {
                   WebkitBackdropFilter: 'blur(24px)',
                   boxShadow: isActive ? `0 0 20px rgba(${r},${g},${b},0.3)` : 'none',
                   transition: 'all 0.2s ease',
-                  minWidth: 180,
+                  minWidth: isMobile ? 'auto' : 180,
+                  flexShrink: isMobile ? 0 : 1,
                   textAlign: 'left',
                 }}
               >
@@ -1355,9 +1407,11 @@ export default function MarketsScreen() {
                   <div style={{ fontSize: 12, fontWeight: 700, color: isActive ? region.color : '#ffffff', lineHeight: 1.3 }}>
                     {region.name}
                   </div>
-                  <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.32)', marginTop: 1 }}>
-                    {region.exchanges}
-                  </div>
+                  {!isMobile && (
+                    <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.32)', marginTop: 1 }}>
+                      {region.exchanges}
+                    </div>
+                  )}
                 </div>
               </button>
             );
@@ -1367,8 +1421,8 @@ export default function MarketsScreen() {
             <button
               onClick={resetView}
               style={{
-                marginTop: 2,
-                padding: '6px 14px',
+                marginTop: isMobile ? 0 : 2,
+                padding: isMobile ? '6px 12px' : '6px 14px',
                 borderRadius: 8,
                 background: 'rgba(255,255,255,0.03)',
                 border: '1px solid rgba(255,255,255,0.09)',
@@ -1377,6 +1431,8 @@ export default function MarketsScreen() {
                 fontSize: 11, fontWeight: 600,
                 letterSpacing: '0.08em', textTransform: 'uppercase',
                 transition: 'all 0.2s ease',
+                flexShrink: isMobile ? 0 : 1,
+                whiteSpace: 'nowrap',
               }}
               onMouseEnter={e => {
                 (e.currentTarget as HTMLElement).style.color = '#fff';
@@ -1542,13 +1598,95 @@ export default function MarketsScreen() {
       })()}
 
       {/* Bottom-left widget stack: Gemini Brief above News of the Day */}
-      {!loading && (
+      {/* Mobile Brief FAB */}
+      {!loading && isMobile && (
+        <button
+          onClick={() => setIsBriefModalOpen(true)}
+          style={{
+            position: 'absolute',
+            top: 12,
+            right: 16,
+            zIndex: 30,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+            padding: '8px 14px',
+            borderRadius: 12,
+            background: 'rgba(99,102,241,0.2)',
+            border: '1px solid rgba(99,102,241,0.4)',
+            cursor: 'pointer',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            boxShadow: '0 4px 16px rgba(99,102,241,0.25)',
+            color: '#fff',
+            fontSize: 12,
+            fontWeight: 700,
+            transition: 'all 0.2s ease',
+          }}
+        >
+          <span>💡</span> Brief
+        </button>
+      )}
+
+      {/* Bottom-left widget stack: Gemini Brief above News of the Day (Desktop only) */}
+      {!loading && !isMobile && (
         <div style={{
           position: 'absolute', bottom: 28, left: 28, zIndex: 20,
           width: 320, display: 'flex', flexDirection: 'column',
         }}>
           <GeminiDailyBrief />
           <NewsOfDay />
+        </div>
+      )}
+
+      {/* Mobile Brief Bottom Sheet Modal */}
+      {!loading && isMobile && isBriefModalOpen && (
+        <div style={{
+          position: 'absolute', inset: 0, zIndex: 100,
+          display: 'flex', alignItems: 'flex-end',
+          background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(10px)',
+          animation: 'fadeIn 0.2s ease',
+        }}>
+          {/* Backdrop Click */}
+          <div
+            style={{ position: 'absolute', inset: 0, cursor: 'pointer' }}
+            onClick={() => setIsBriefModalOpen(false)}
+          />
+          {/* Sheet Container */}
+          <div style={{
+            position: 'relative', width: '100%', maxHeight: '80vh',
+            background: 'rgba(5,10,24,0.96)',
+            borderTop: '1px solid rgba(99,102,241,0.35)',
+            borderTopLeftRadius: 24, borderTopRightRadius: 24,
+            padding: '24px 20px 32px',
+            boxShadow: '0 -10px 40px rgba(0,0,0,0.85), 0 0 30px rgba(99,102,241,0.15)',
+            display: 'flex', flexDirection: 'column', gap: 16,
+            animation: 'slideUpMobileSheet 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+            overflowY: 'auto',
+            zIndex: 101,
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ fontSize: 18 }}>💡</span>
+                <h2 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: '#fff' }}>
+                  Daily Market Brief
+                </h2>
+              </div>
+              <button
+                onClick={() => setIsBriefModalOpen(false)}
+                style={{
+                  background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.5)',
+                  fontSize: 28, cursor: 'pointer', padding: 0, lineHeight: 1,
+                }}
+              >
+                ×
+              </button>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <GeminiDailyBrief />
+              <NewsOfDay />
+            </div>
+          </div>
         </div>
       )}
 
@@ -1559,7 +1697,7 @@ export default function MarketsScreen() {
         const { r, g, b } = hexToRgb(region.color);
         return (
           <div style={{
-            position: 'absolute', bottom: 30, left: '50%',
+            position: 'absolute', bottom: isMobile ? 84 : 30, left: '50%',
             transform: 'translateX(-50%)',
             zIndex: 10, pointerEvents: 'none',
             padding: '9px 22px',
@@ -1587,7 +1725,7 @@ export default function MarketsScreen() {
           <div
             onClick={() => setIsNewsModalOpen(true)}
             style={{
-              position: 'absolute', bottom: 30, left: '50%',
+              position: 'absolute', bottom: isMobile ? 84 : 30, left: '50%',
               transform: 'translateX(-50%)',
               zIndex: 15, cursor: 'pointer',
               padding: '12px 28px',
@@ -1790,6 +1928,17 @@ export default function MarketsScreen() {
         @keyframes indexCard-pop {
           from { opacity: 0; transform: scale(0.94) translateY(4px); }
           to   { opacity: 1; transform: scale(1)    translateY(0);    }
+        }
+        @keyframes slideUpMobileSheet {
+          from { transform: translateY(100%); }
+          to   { transform: translateY(0); }
+        }
+        .market-legend-swiper::-webkit-scrollbar {
+          display: none;
+        }
+        .market-legend-swiper {
+          scrollbar-width: none;
+          -ms-overflow-style: none;
         }
       `}</style>
 
