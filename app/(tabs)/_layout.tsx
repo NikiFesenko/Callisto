@@ -64,8 +64,7 @@ function useInjectMaterialIcons() {
 
 /**
  * Web top navbar using expo-router <Link> for proper static-mode navigation.
- * Each tab is a <Link href="..."> which expo-router handles with client-side
- * transitions even in static output mode.
+ * On mobile (< 768px) the nav links collapse into a hamburger drawer.
  */
 function WebNavBar() {
   useInjectMaterialIcons();
@@ -75,6 +74,24 @@ function WebNavBar() {
   const triggeredCount = automations.filter((a) => a.status === 'triggered').length;
   const { connected, publicKey } = useWalletStore();
   const openWalletModal = useOpenWalletModal();
+
+  const [isMobile, setIsMobile] = React.useState(
+    typeof window !== 'undefined' ? window.innerWidth < 768 : false
+  );
+  const [menuOpen, setMenuOpen] = React.useState(false);
+
+  React.useEffect(() => {
+    const handleResize = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      if (!mobile) setMenuOpen(false); // auto-close when going to desktop
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Close menu when route changes
+  React.useEffect(() => { setMenuOpen(false); }, [pathname]);
 
   const isActive = (href: string) =>
     href === '/' ? pathname === '/' || pathname === '' : pathname.startsWith(href);
@@ -88,61 +105,211 @@ function WebNavBar() {
           <RNText style={styles.brandText}>Colisto</RNText>
         </Link>
 
-        {/* Tab links */}
-        <View style={styles.navLinks}>
-          {TAB_DEFS.map((tab) => {
-            const active = isActive(tab.href);
-            return (
-              <Link
-                key={tab.name}
-                href={tab.href as any}
-                style={[styles.navLink, active && styles.navLinkActive]}
-                accessibilityLabel={`${tab.title} tab`}
-              >
-                <MaterialIcon
-                  name={tab.icon}
-                  size={20}
-                  color={active ? Colors.textPrimary : Colors.textMuted}
-                />
-                <RNText style={[styles.navLabel, active && styles.navLabelActive]}>
-                  {tab.title}
-                </RNText>
-                {tab.name === 'automations' && triggeredCount > 0 && (
-                  <View style={styles.badge}>
-                    <RNText style={styles.badgeText}>{triggeredCount}</RNText>
-                  </View>
-                )}
-                {active && <View style={styles.activeIndicator} />}
-              </Link>
-            );
-          })}
-        </View>
+        {/* Desktop: Tab links */}
+        {!isMobile && (
+          <View style={styles.navLinks}>
+            {TAB_DEFS.map((tab) => {
+              const active = isActive(tab.href);
+              return (
+                <Link
+                  key={tab.name}
+                  href={tab.href as any}
+                  style={[styles.navLink, active && styles.navLinkActive]}
+                  accessibilityLabel={`${tab.title} tab`}
+                >
+                  <MaterialIcon
+                    name={tab.icon}
+                    size={20}
+                    color={active ? Colors.textPrimary : Colors.textMuted}
+                  />
+                  <RNText style={[styles.navLabel, active && styles.navLabelActive]}>
+                    {tab.title}
+                  </RNText>
+                  {tab.name === 'automations' && triggeredCount > 0 && (
+                    <View style={styles.badge}>
+                      <RNText style={styles.badgeText}>{triggeredCount}</RNText>
+                    </View>
+                  )}
+                  {active && <View style={styles.activeIndicator} />}
+                </Link>
+              );
+            })}
+          </View>
+        )}
 
-        {/* Wallet Button */}
-        <Pressable
-          onPress={openWalletModal}
-          style={({ pressed }) => [
-            styles.walletButton,
-            connected && styles.walletButtonConnected,
-            pressed && { opacity: 0.8 },
-          ]}
-          accessibilityLabel={connected ? 'Wallet connected' : 'Connect wallet'}
-        >
-          <MaterialIcon
-            name={connected ? 'check_circle' : 'account_balance_wallet'}
-            size={16}
-            color={connected ? Colors.neonGreen : '#FFF'}
-          />
-          <RNText style={[
-            styles.walletButtonText,
-            connected && styles.walletButtonTextConnected,
-          ]}>
-            {connected && publicKey
-              ? truncateAddress(publicKey, 4)
-              : 'Connect Wallet'}
-          </RNText>
-        </Pressable>
+        {/* Right side: Wallet + Hamburger (mobile) */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+          {/* Wallet Button */}
+          <Pressable
+            onPress={openWalletModal}
+            style={({ pressed }) => [
+              styles.walletButton,
+              connected && styles.walletButtonConnected,
+              pressed && { opacity: 0.8 },
+            ]}
+            accessibilityLabel={connected ? 'Wallet connected' : 'Connect wallet'}
+          >
+            <MaterialIcon
+              name={connected ? 'check_circle' : 'account_balance_wallet'}
+              size={16}
+              color={connected ? Colors.neonGreen : '#FFF'}
+            />
+            {!isMobile && (
+              <RNText style={[
+                styles.walletButtonText,
+                connected && styles.walletButtonTextConnected,
+              ]}>
+                {connected && publicKey
+                  ? truncateAddress(publicKey, 4)
+                  : 'Connect Wallet'}
+              </RNText>
+            )}
+          </Pressable>
+
+          {/* Hamburger (mobile only) */}
+          {isMobile && (
+            <Pressable
+              onPress={() => setMenuOpen((v) => !v)}
+              accessibilityLabel={menuOpen ? 'Close menu' : 'Open menu'}
+              style={{
+                width: 40, height: 40,
+                alignItems: 'center', justifyContent: 'center',
+                borderRadius: 8,
+                backgroundColor: menuOpen ? 'rgba(255,255,255,0.08)' : 'transparent',
+              } as any}
+            >
+              {/* Animated hamburger → X */}
+              <RNText style={{ fontSize: 20, color: Colors.textPrimary, lineHeight: 22 } as any}>
+                {menuOpen ? '✕' : '☰'}
+              </RNText>
+            </Pressable>
+          )}
+        </View>
       </View>
+
+      {/* Mobile Drawer */}
+      {isMobile && menuOpen && Platform.OS === 'web' && (
+        <>
+          {/* Backdrop */}
+          {React.createElement('div', {
+            onClick: () => setMenuOpen(false),
+            style: {
+              position: 'fixed',
+              inset: 0,
+              top: 64,
+              zIndex: 98,
+              background: 'rgba(0,0,0,0.45)',
+              backdropFilter: 'blur(4px)',
+              WebkitBackdropFilter: 'blur(4px)',
+            },
+          })}
+          {/* Drawer panel */}
+          {React.createElement('div', {
+            className: 'mobile-nav-drawer',
+            style: {
+              position: 'fixed',
+              top: 64,
+              left: 0,
+              right: 0,
+              zIndex: 99,
+              background: 'rgba(8,11,22,0.97)',
+              borderBottom: '1px solid rgba(255,255,255,0.08)',
+              boxShadow: '0 12px 40px rgba(0,0,0,0.7)',
+              backdropFilter: 'blur(24px)',
+              WebkitBackdropFilter: 'blur(24px)',
+              padding: '8px 16px 20px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 4,
+            },
+          },
+            // Nav items
+            ...TAB_DEFS.map((tab) => {
+              const active = isActive(tab.href);
+              return React.createElement(
+                Link,
+                {
+                  key: tab.name,
+                  href: tab.href as any,
+                  style: {
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 14,
+                    padding: '14px 16px',
+                    borderRadius: 12,
+                    backgroundColor: active ? 'rgba(255,255,255,0.06)' : 'transparent',
+                    borderWidth: 1,
+                    borderColor: active ? 'rgba(255,255,255,0.1)' : 'transparent',
+                    textDecorationLine: 'none',
+                    position: 'relative',
+                  } as any,
+                  accessibilityLabel: `${tab.title} tab`,
+                },
+                React.createElement(MaterialIcon, {
+                  name: tab.icon,
+                  size: 22,
+                  color: active ? Colors.textPrimary : Colors.textMuted,
+                }),
+                React.createElement(
+                  RNText,
+                  {
+                    style: {
+                      fontSize: 16,
+                      fontWeight: active ? '700' : '500',
+                      color: active ? Colors.textPrimary : Colors.textMuted,
+                      flex: 1,
+                    } as any,
+                  },
+                  tab.title
+                ),
+                // Badge for automations
+                tab.name === 'automations' && triggeredCount > 0
+                  ? React.createElement(
+                      View,
+                      { style: styles.badge },
+                      React.createElement(RNText, { style: styles.badgeText }, triggeredCount)
+                    )
+                  : null,
+                // Active dot
+                active
+                  ? React.createElement('div', {
+                      style: {
+                        width: 6, height: 6,
+                        borderRadius: '50%',
+                        background: Colors.neonGreen,
+                        boxShadow: `0 0 8px ${Colors.neonGreen}`,
+                      },
+                    })
+                  : null
+              );
+            }),
+            // Bottom wallet info row
+            connected && publicKey
+              ? React.createElement(
+                  'div',
+                  {
+                    style: {
+                      marginTop: 8,
+                      padding: '10px 16px',
+                      borderRadius: 10,
+                      background: 'rgba(0,255,163,0.05)',
+                      border: '1px solid rgba(0,255,163,0.15)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 10,
+                    },
+                  },
+                  React.createElement(MaterialIcon, { name: 'check_circle', size: 16, color: Colors.neonGreen }),
+                  React.createElement(
+                    RNText,
+                    { style: { fontSize: 13, color: Colors.neonGreen, fontWeight: '600' } as any },
+                    truncateAddress(publicKey, 6)
+                  )
+                )
+              : null
+          )}
+        </>
+      )}
     </View>
   );
 }
@@ -266,6 +433,7 @@ const styles = StyleSheet.create({
     color: Colors.neonGreen,
   },
 });
+
 
 /* ─── Layout Export ─── */
 export default function TabLayout() {

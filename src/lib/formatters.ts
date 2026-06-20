@@ -110,3 +110,64 @@ export function formatRelativeTime(date: Date): string {
   if (diffDays < 7) return `${diffDays}d ago`;
   return formatChartDate(date.toISOString(), 'medium');
 }
+
+/**
+ * Resolve a Google News RSS item to the real publisher article URL.
+ *
+ * WHY THIS EXISTS
+ * ───────────────
+ * rss2json returns item.link as a Google News redirect URL:
+ *   https://news.google.com/rss/articles/CBMiXWh0dHBzOi8v...
+ *
+ * These redirects are Google-session-dependent. When a user with no active
+ * Google session clicks one from a third-party web app, the redirect fails
+ * silently and the browser stays on the current page (or opens a blank tab).
+ *
+ * HOW IT WORKS
+ * ────────────
+ * Strategy 1 (most reliable): rss2json's "description" field for Google News
+ * items contains raw HTML from Google's feed, which includes an <a href="...">
+ * pointing directly to the publisher article. We extract the first href that
+ * is NOT a google.com domain — that is the real article URL.
+ *
+ * Strategy 2 (fallback): Convert the RSS-specific redirect path to the regular
+ * Google News web article path. "/rss/articles/" → "/articles/" opens Google's
+ * normal article page, which browsers handle correctly (auto-redirect to article).
+ *
+ * Strategy 3 (last resort): Return the original link unchanged.
+ */
+export function resolveGoogleNewsItem(item: {
+  link?: string;
+  description?: string;
+  content?: string;
+  [key: string]: any;
+}): string {
+  const link = item?.link ?? '';
+
+  // ── Strategy 1: Extract real URL from description HTML ────────────────────
+  // rss2json description for Google News looks like:
+  //   <ol><li><a href="https://publisher.com/article">...</a></li>...</ol>
+  const html = item?.description ?? item?.content ?? '';
+  if (html) {
+    // Match the first href that is NOT a google.com URL
+    const match = html.match(/href="(https?:\/\/(?!(?:www\.)?google\.com)[^"]+)"/);
+    if (match?.[1]) {
+      return match[1];
+    }
+  }
+
+  // ── Strategy 2: RSS redirect → web redirect ───────────────────────────────
+  // /rss/articles/CBMi... → /articles/CBMi...
+  // The web version of the redirect works normally in all browsers.
+  if (link.includes('news.google.com/rss/articles/')) {
+    return link.replace('/rss/articles/', '/articles/');
+  }
+
+  // ── Strategy 3: Return as-is ──────────────────────────────────────────────
+  return link;
+}
+
+/** @deprecated Use resolveGoogleNewsItem instead */
+export function decodeGoogleNewsUrl(googleUrl: string): string {
+  return resolveGoogleNewsItem({ link: googleUrl });
+}

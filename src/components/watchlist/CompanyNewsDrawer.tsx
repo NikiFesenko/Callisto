@@ -1,6 +1,7 @@
 // @ts-nocheck
 import React, { useEffect, useState, useRef } from 'react';
 import { getStockColor, hexToRgb } from '@/src/lib/stockColors';
+import { resolveGoogleNewsItem } from '@/src/lib/formatters';
 
 interface NewsItem {
   title: string;
@@ -20,55 +21,25 @@ interface CompanyNewsDrawerProps {
   onClose: () => void;
 }
 
-async function fetchCompanyNews(symbol: string, name: string): Promise<NewsItem[]> {
-  // Search for the company name + symbol in Google News finance context
-  const query = encodeURIComponent(`"${name}" OR "${symbol}" stock earnings revenue`);
-  const rssUrl = encodeURIComponent(`https://news.google.com/rss/search?q=${query}&hl=en-US&gl=US&ceid=US:en`);
-  const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${rssUrl}`;
-
-  const res = await fetch(apiUrl);
+async function fetchCompanyNews(symbol: string): Promise<NewsItem[]> {
+  const res = await fetch(`/api/news/company?symbol=${encodeURIComponent(symbol)}`);
   if (!res.ok) throw new Error('fetch failed');
-  const data = await res.json();
+  const data: any[] = await res.json();
+  if (!Array.isArray(data)) return [];
 
-  if (data.status !== 'ok' || !data.items) return [];
-
-  const HIGH_IMPACT_WORDS = [
-    'earnings', 'beat', 'miss', 'revenue', 'profit', 'loss', 'dividend',
-    'acquisition', 'merger', 'lawsuit', 'sec', 'fda', 'recall', 'bankrupt',
-    'surge', 'crash', 'record', 'all-time', 'upgrade', 'downgrade', 'layoff',
-    'raise', 'cut', 'guidance', 'forecast', 'buyback', 'ipo', 'split'
-  ];
-
-  return data.items.slice(0, 6).map((item: any) => {
-    const parts = item.title.split(' - ');
-    const source = parts.length > 1 ? parts.pop()!.trim() : 'News';
-    const title = parts.join(' - ').trim();
-
-    const text = (title + ' ' + (item.description || '')).toLowerCase();
-    const isHigh = HIGH_IMPACT_WORDS.some(w => text.includes(w));
-
-    const pubDate = new Date(item.pubDate);
-    const diffHours = Math.floor((Date.now() - pubDate.getTime()) / 3_600_000);
-    const timeStr =
-      diffHours < 1 ? 'Just now' :
-      diffHours < 24 ? `${diffHours}h ago` :
-      `${Math.floor(diffHours / 24)}d ago`;
-
-    const rawSummary = (item.description || '')
-      .replace(/<[^>]+>/g, '')
-      .replace(/\s+/g, ' ')
-      .trim()
-      .slice(0, 130);
-
-    return {
-      title,
-      summary: rawSummary ? rawSummary + '…' : '',
-      time: timeStr,
-      source,
-      impact: isHigh ? 'high' : 'medium',
-      link: item.link,
-    };
-  });
+  return data.map((item: any) => ({
+    title:   item.title   ?? '',
+    summary: item.summary ?? '',
+    time:    item.publishedAt
+      ? (() => {
+          const diffH = Math.floor((Date.now() - new Date(item.publishedAt).getTime()) / 3_600_000);
+          return diffH < 1 ? 'Just now' : diffH < 24 ? `${diffH}h ago` : `${Math.floor(diffH / 24)}d ago`;
+        })()
+      : '',
+    source: item.source ?? 'Finnhub',
+    impact: (item.impact ?? 'medium') as 'high' | 'medium',
+    link:   item.url ?? '',
+  }));
 }
 
 export function CompanyNewsDrawer({
@@ -92,12 +63,12 @@ export function CompanyNewsDrawer({
   useEffect(() => {
     let alive = true;
     setLoading(true);
-    fetchCompanyNews(symbol, name)
+    fetchCompanyNews(symbol)
       .then(items => { if (alive) setNews(items); })
       .catch(console.error)
       .finally(() => { if (alive) setLoading(false); });
     return () => { alive = false; };
-  }, [symbol, name]);
+  }, [symbol]);
 
   const handleClose = () => {
     setVisible(false);

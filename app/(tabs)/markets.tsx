@@ -6,6 +6,7 @@ import { CompanyNewsDrawer } from '@/src/components/watchlist/CompanyNewsDrawer'
 import topStocksData from '@/src/lib/data/top_stocks.json';
 import { GEO_HOTSPOTS, SEVERITY_PULSE, type GeoHotspot } from '@/src/lib/geoHotspots';
 import { fetchGeminiSummary, callGeminiChat, type GeminiResult, type ChatMessage } from '@/src/lib/geminiSummary';
+import { decodeGoogleNewsUrl, resolveGoogleNewsItem } from '@/src/lib/formatters';
 
 // ─── Financial Regions ────────────────────────────────────────────────────────
 const FINANCIAL_REGIONS = [
@@ -253,22 +254,16 @@ function GeoNewsDrawer({ hotspot, onClose }: { hotspot: GeoHotspot; onClose: () 
     setLoading(true);
     (async () => {
       try {
-        const q = encodeURIComponent(hotspot.newsQuery);
-        const rssUrl = encodeURIComponent(`https://news.google.com/rss/search?q=${q}&hl=en-US&gl=US&ceid=US:en`);
-        const res = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${rssUrl}`);
-        const data = await res.json();
-        if (data.status === 'ok' && data.items && alive) {
-          const parsed = data.items.slice(0, 7).map((item: any) => {
-            const parts = item.title.split(' - ');
-            const source = parts.length > 1 ? parts.pop()!.trim() : 'News';
-            const title = parts.join(' - ').trim();
-            const text = (title + ' ' + (item.description || '')).toLowerCase();
+        const res = await fetch('/api/news/general');
+        const data: any[] = await res.json();
+        if (alive && Array.isArray(data)) {
+          const HIGH_IMPACT_WORDS = ['war','attack','sanction','missile','coup','conflict','ceasefire','invasion','airstrike','nuclear','protest','explosion','crisis','rally','plunge','surge','ban','embargo'];
+          const parsed = data.slice(0, 7).map((item: any) => {
+            const text = (item.title + ' ' + item.summary).toLowerCase();
             const isHigh = HIGH_IMPACT_WORDS.some(w => text.includes(w));
-            const pubDate = new Date(item.pubDate);
-            const diffH = Math.floor((Date.now() - pubDate.getTime()) / 3_600_000);
+            const diffH = Math.floor((Date.now() - new Date(item.publishedAt).getTime()) / 3_600_000);
             const timeStr = diffH < 1 ? 'Just now' : diffH < 24 ? `${diffH}h ago` : `${Math.floor(diffH/24)}d ago`;
-            const summary = (item.description || '').replace(/<[^>]+>/g, '').replace(/\s+/g,' ').trim().slice(0,130);
-            return { title, summary: summary ? summary + '…' : '', time: timeStr, source, impact: isHigh ? 'high' : 'medium', link: item.link };
+            return { title: item.title, summary: item.summary?.slice(0, 130) ?? '', time: timeStr, source: item.source, impact: isHigh ? 'high' : 'medium', link: item.url };
           });
           setNews(parsed);
         }
@@ -652,25 +647,17 @@ function NewsOfDay() {
     let alive = true;
     (async () => {
       try {
-        // Simplified query that Google News RSS supports
-        const query = 'stock market OR geopolitical OR oil price OR Fed OR war OR sanctions';
-        const rssUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=en-US&gl=US&ceid=US:en`;
-        const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssUrl)}`;
-        const res = await fetch(apiUrl);
+        const res = await fetch('/api/news/general');
         if (!res.ok) throw new Error('HTTP ' + res.status);
-        const data = await res.json();
+        const data: any[] = await res.json();
         if (!alive) return;
-        if (data.status === 'ok' && Array.isArray(data.items) && data.items.length) {
+        if (Array.isArray(data) && data.length) {
           const HIGH = ['war','attack','sanction','rate cut','rate hike','crash','plunge','surge','ceasefire','fed','invasion','nuclear','missiles','tariff'];
-          const parsed = data.items.slice(0, 6).map((item: any) => {
-            const parts = (item.title || '').split(' - ');
-            const source = parts.length > 1 ? parts.pop()!.trim() : 'News';
-            const title = parts.join(' - ').trim();
-            const isBreaking = HIGH.some(w => title.toLowerCase().includes(w));
-            const pubDate = new Date(item.pubDate);
-            const diffH = Math.floor((Date.now() - pubDate.getTime()) / 3_600_000);
+          const parsed = data.slice(0, 6).map((item: any) => {
+            const isBreaking = HIGH.some(w => item.title.toLowerCase().includes(w));
+            const diffH = Math.floor((Date.now() - new Date(item.publishedAt).getTime()) / 3_600_000);
             const timeStr = diffH < 1 ? 'Just now' : diffH < 24 ? `${diffH}h ago` : `${Math.floor(diffH / 24)}d ago`;
-            return { title, source, timeStr, isBreaking, link: item.link };
+            return { title: item.title, source: item.source, timeStr, isBreaking, link: item.url };
           });
           setHeadlines(parsed);
         } else {
@@ -827,48 +814,38 @@ export default function MarketsScreen() {
   // Fetch real news when modal opens
   useEffect(() => {
     if (!isNewsModalOpen || !activeRegion) return;
-    if (fetchedNews[activeRegion]) return; // Already fetched
+    if (fetchedNews[activeRegion]) return;
 
     let isMounted = true;
     const fetchNews = async () => {
       setIsFetchingNews(true);
       try {
-        // Build an RSS URL that searches Google News for finance/crypto/stock news regarding the region
-        const query = encodeURIComponent(`(finance OR crypto OR stock OR market) "${activeRegion}"`);
-        const rssUrl = encodeURIComponent(`https://news.google.com/rss/search?q=${query}&hl=en-US&gl=US&ceid=US:en`);
-        const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${rssUrl}`;
-        
-        const res = await fetch(apiUrl);
+        const res = await fetch('/api/news/general');
         if (!res.ok) throw new Error('Failed to fetch');
-        const data = await res.json();
-        
-        if (data.status === 'ok' && data.items && isMounted) {
-          const parsedNews = data.items.slice(0, 5).map((item: any) => {
-            // Google News RSS titles usually look like: "Real Title - Source Name"
-            const parts = item.title.split(' - ');
-            const source = parts.length > 1 ? parts.pop() : 'News';
-            const title = parts.join(' - ');
-            
-            // Generate mock impact based on keywords
-            const textToSearch = (title + ' ' + item.description).toLowerCase();
-            const isHigh = ['crash', 'surge', 'rate', 'fed', 'sec', 'banned', 'record', 'plunge', 'jump', 'all-time high'].some(w => textToSearch.includes(w));
-            
-            // Format time
-            const pubDate = new Date(item.pubDate);
-            const now = new Date();
-            const diffHours = Math.floor((now.getTime() - pubDate.getTime()) / (1000 * 60 * 60));
-            const timeStr = diffHours < 1 ? 'Just now' : diffHours < 24 ? `${diffHours}h ago` : `${Math.floor(diffHours/24)}d ago`;
+        const data: any[] = await res.json();
 
+        if (Array.isArray(data) && isMounted) {
+          const regionLower = activeRegion.toLowerCase();
+          const HIGH_KW = ['crash', 'surge', 'rate', 'fed', 'sec', 'banned', 'record', 'plunge', 'jump', 'all-time'];
+          // Prefer articles mentioning the region, fall back to all articles
+          const relevant = data.filter(item =>
+            item.title.toLowerCase().includes(regionLower) ||
+            (item.summary ?? '').toLowerCase().includes(regionLower)
+          );
+          const pool = (relevant.length >= 3 ? relevant : data).slice(0, 5);
+          const parsedNews = pool.map((item: any) => {
+            const isHigh = HIGH_KW.some(w => item.title.toLowerCase().includes(w));
+            const diffH = Math.floor((Date.now() - new Date(item.publishedAt).getTime()) / 3_600_000);
+            const timeStr = diffH < 1 ? 'Just now' : diffH < 24 ? `${diffH}h ago` : `${Math.floor(diffH/24)}d ago`;
             return {
-              title,
-              summary: item.description?.replace(/<[^>]+>/g, '').slice(0, 120) + '...', // Strip HTML
+              title: item.title,
+              summary: item.summary?.slice(0, 120) ?? '',
               time: timeStr,
-              source,
+              source: item.source,
               impact: isHigh ? 'high' : 'medium',
-              link: item.link
+              link: item.url
             };
           });
-          
           setFetchedNews(prev => ({ ...prev, [activeRegion]: parsedNews }));
         }
       } catch (err) {
@@ -877,9 +854,9 @@ export default function MarketsScreen() {
         if (isMounted) setIsFetchingNews(false);
       }
     };
-    
+
     fetchNews();
-    
+
     return () => { isMounted = false; };
   }, [isNewsModalOpen, activeRegion, fetchedNews]);
 
@@ -1130,20 +1107,21 @@ export default function MarketsScreen() {
             // Pre-fetch headline for this hotspot into React state
             ;(async () => {
               try {
-                const rssUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(d.newsQuery)}&hl=en-US&gl=US&ceid=US:en`;
-                const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssUrl)}`;
-                const res = await fetch(apiUrl);
+                const res = await fetch('/api/news/general');
                 if (!res.ok) return;
-                const data = await res.json();
-                if (data.status === 'ok' && data.items?.length) {
-                  const item = data.items[0];
-                  const parts = (item.title || '').split(' - ');
-                  const source = parts.length > 1 ? parts.pop()!.trim() : '';
-                  const title = parts.join(' - ').trim();
-                  const pubDate = new Date(item.pubDate);
-                  const diffH = Math.floor((Date.now() - pubDate.getTime()) / 3_600_000);
+                const data: any[] = await res.json();
+                if (Array.isArray(data) && data.length) {
+                  // Pick the most relevant article by matching hotspot keywords
+                  const queryWords = d.newsQuery.toLowerCase().split(/\s+/);
+                  const scored = data.map(item => ({
+                    item,
+                    score: queryWords.filter(w => item.title.toLowerCase().includes(w)).length
+                  }));
+                  scored.sort((a, b) => b.score - a.score);
+                  const best = scored[0].item;
+                  const diffH = Math.floor((Date.now() - new Date(best.publishedAt).getTime()) / 3_600_000);
                   const timeStr = diffH < 1 ? 'Just now' : diffH < 24 ? `${diffH}h ago` : `${Math.floor(diffH / 24)}d ago`;
-                  setHotspotHeadlines(prev => ({ ...prev, [d.id]: { title, source, timeStr, link: item.link } }));
+                  setHotspotHeadlines(prev => ({ ...prev, [d.id]: { title: best.title, source: best.source, timeStr, link: best.url } }));
                 }
               } catch(_) {}
             })();
@@ -1490,8 +1468,28 @@ export default function MarketsScreen() {
                     <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)' }}>{hl.source}</span>
                     <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.2)' }}>{hl.timeStr}</span>
                   </div>
-                  <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.88)', lineHeight: 1.45, marginBottom: 6 }}>{hl.title}</div>
-                  <div style={{ fontSize: 9, color: h.color, fontWeight: 600 }}>Click for all news →</div>
+                  {/* Headline — pointerEvents: auto overrides parent tooltip's 'none' */}
+                  <a
+                    href={hl.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      display: 'block',
+                      fontSize: 11, fontWeight: 600,
+                      color: 'rgba(255,255,255,0.88)',
+                      lineHeight: 1.45, marginBottom: 6,
+                      textDecoration: 'none',
+                      pointerEvents: 'auto',
+                      cursor: 'pointer',
+                    }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#fff'; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.88)'; }}
+                  >
+                    {hl.title}
+                  </a>
+                  <div style={{ fontSize: 9, color: h.color, fontWeight: 600, pointerEvents: 'none' }}>
+                    ↗ Read article
+                  </div>
                 </>
               ) : (
                 <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.28)', fontStyle: 'italic' }}>Loading headline…</span>

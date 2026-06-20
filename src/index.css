@@ -403,3 +403,57 @@ html, body, #root {
 .wallet-adapter-modal-middle-button { display: block; cursor: pointer; margin-top: 48px; width: 100%; background: var(--gradient-purple); padding: 12px; font-size: 16px; border: none; border-radius: 10px; color: #fff; font-weight: 700; }
 .wallet-adapter-modal-collapse-button svg { align-self: center; fill: var(--text-muted); }
 .wallet-adapter-modal-collapse-button.wallet-adapter-modal-collapse-button-active svg { transform: rotate(180deg); transition: transform ease-in 150ms; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   MOBILE RESPONSIVE — Breakpoint ≤ 768px
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+
+  /* ── Dashboard Hero ──────────────────────────────────────────────────── */
+  .dashboard-hero {
+    padding: 36px 20px 32px !important;
+  }
+  .dashboard-hero h1 {
+    font-size: 32px !important;
+    letter-spacing: -1px !important;
+    line-height: 1.1 !important;
+  }
+  .dashboard-hero p {
+    font-size: 15px !important;
+    max-width: 100% !important;
+  }
+  .dashboard-hero .cta-row {
+    flex-direction: column !important;
+    gap: 10px !important;
+    width: 100% !important;
+  }
+  .dashboard-hero .cta-row a {
+    width: 100% !important;
+    display: block !important;
+  }
+  .dashboard-hero .cta-row button {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  /* ── Dashboard Content ───────────────────────────────────────────────── */
+  .dashboard-content {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+
+  /* ── Charts: always single column ───────────────────────────────────── */
+  .charts-two-col {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* ── Mobile Drawer ───────────────────────────────────────────────────── */
+  @keyframes mobileMenuSlideIn {
+    from { opacity: 0; transform: translateY(-12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .mobile-nav-drawer {
+    animation: mobileMenuSlideIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+}

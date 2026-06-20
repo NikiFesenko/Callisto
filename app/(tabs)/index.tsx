@@ -73,7 +73,7 @@ export default function DashboardScreen() {
   return (
     <PageShell>
       {/* ── Hero ─────────────────────────────────────────────────────── */}
-      <div style={{
+      <div className="dashboard-hero" style={{
         padding: '64px 32px 48px',
         textAlign: 'center',
         background: 'radial-gradient(ellipse 80% 60% at 50% -10%, rgba(124,58,237,0.12) 0%, transparent 70%)',
@@ -107,7 +107,7 @@ export default function DashboardScreen() {
             Execute flawless macro-driven strategies on Solana with our institutional-grade engine.
           </p>
 
-          <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
+          <div className="cta-row" style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
             <Link to="/automations" style={{ textDecoration: 'none' }}>
               <button className="btn-primary" style={{ height: 44, padding: '0 24px', borderRadius: 10, fontSize: 14 }}>
                 ⚡ Create Automation
@@ -122,7 +122,7 @@ export default function DashboardScreen() {
         </div>
       </div>
 
-      <div style={{ padding: '0 28px 40px', maxWidth: 1400, margin: '0 auto', width: '100%' }}>
+      <div className="dashboard-content" style={{ padding: '0 28px 40px', maxWidth: 1400, margin: '0 auto', width: '100%' }}>
         {/* KPI strip */}
         <div style={{ marginTop: 28, marginBottom: 32 }}>
           <KPIRow />
@@ -140,7 +140,7 @@ export default function DashboardScreen() {
             />
           </ChartCard>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+          <div className="charts-two-col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
             <ChartCard title="Federal Funds Rate" subtitle="US central bank interest rate target">
               <LineChart
                 data={fedChartData} label="Fed Funds Rate"
