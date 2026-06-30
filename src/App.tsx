@@ -1,8 +1,10 @@
 // @ts-nocheck
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Outlet, Link, useLocation } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import { SolanaWalletProvider } from '@/src/components/wallet/SolanaWalletProvider';
+import { queryClient, localStoragePersister } from '@/src/lib/queryClient';
+import { prefetchDashboard } from '@/src/lib/prefetchDashboard';
 
 import DashboardScreen from '../app/(tabs)/index';
 import PortfolioScreen from '../app/(tabs)/portfolio';
@@ -19,11 +21,10 @@ import { truncateAddress } from '@/src/lib/formatters';
 import { useThemeStore } from '@/src/store/useThemeStore';
 import { useAuthStore } from '@/src/store/useAuthStore';
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: { retry: 2, staleTime: 5 * 60 * 1000, refetchOnWindowFocus: false },
-  },
-});
+// Kick off all dashboard prefetches immediately — before any component mounts.
+// On cache hit (localStorage fresh) this is a no-op. On miss it starts the
+// requests in parallel so data arrives before the spinner is even visible.
+prefetchDashboard();
 
 const TAB_DEFS = [
   { name: 'index',       title: 'Overview',     icon: 'grid_view',              href: '/' },
@@ -258,7 +259,21 @@ function Layout() {
 
 export default function App() {
   return (
-    <QueryClientProvider client={queryClient}>
+    <PersistQueryClientProvider
+      client={queryClient}
+      persistOptions={{
+        persister: localStoragePersister,
+        // Max age of persisted cache — 24h. After this, it's treated as a cold start.
+        maxAge: 24 * 60 * 60 * 1000,
+        // Don't persist auth-sensitive or high-frequency queries
+        dehydrateOptions: {
+          shouldDehydrateQuery: (query) => {
+            const key = query.queryKey[0] as string;
+            return ['fred', 'priceHistory', 'marketData', 'cryptoNews'].includes(key);
+          },
+        },
+      }}
+    >
       <SolanaWalletProvider>
         <BrowserRouter>
           <Routes>
@@ -274,6 +289,6 @@ export default function App() {
           </Routes>
         </BrowserRouter>
       </SolanaWalletProvider>
-    </QueryClientProvider>
+    </PersistQueryClientProvider>
   );
 }
